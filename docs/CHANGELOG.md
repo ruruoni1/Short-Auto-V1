@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased - Timeline - 2026-09-06
+
+- Source 전체를 보존하며 Insert/Pause/Overlay/trim/ending을 계산하는 resolveTimeline 추가.
+- 저장된 시간축의 참조·revision·연속성·Source 커버리지·누락/중복·총길이 심화 검증 추가.
+- Master 검증: 전체 144개 테스트, 타입 검사, 빌드, 공개 API 통과. 실제 미디어 확인과 렌더는 미포함.
+
 ## Unreleased - Caption 파싱 - 2026-09-06
 
 - parseSrt 및 validateCaptions 공개 API 추가. BOM/CRLF/LF와 한일 다중행 원문, 번호 및 ms 시간을 보존한다.

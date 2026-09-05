@@ -1,5 +1,11 @@
 # DECISIONS
 
+## 2026-09-06 — Timeline Resolver 인수
+
+- TIMELINE_CONTRACT.md의 ms 계산/검증 정책을 인수한다. 같은 Source anchor의 정지 Insert는 배열 순서, Overlay는 해당 anchor의 정지 Insert가 모두 끝난 뒤 시작한다.
+- Overlay는 연속 Output 길이를 사용하고 ending 이전 영역을 넘어가면 오류다. Source 전체 무음을 보존하며 enabled ending은 양수 길이로 한 번 추가한다.
+- Scene outputTiming은 현재 명시 오류이며 Scene/Editor 단계에서 지원한다. 표현 Override는 후속 적용 warning으로 남긴다. 원본 시간을 고치거나 미지원 Override를 조용히 무시하지 않는다.
+
 ## 2026-09-06 — Caption 파싱 기능 인수
 
 - CAPTION_CONTRACT.md의 strict SRT 파싱/진단 계약을 인수한다. 오류 시 부분 SourceTimeline을 반환하지 않는다. 자동 재번호/정렬/시간 보정 없이 원문을 보존한다.
