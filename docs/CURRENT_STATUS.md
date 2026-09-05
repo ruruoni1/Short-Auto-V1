@@ -26,7 +26,7 @@
 - 00_Master: ACTIVE — 전체 20개 명세 검토 완료, DECISIONS에 해석 차이 정리
 - 01_Core: COMPLETE — 공통 계약/런타임 검증 최초 기능 인수, Master 42 tests/typecheck/build/public import 통과
 - 02_Caption: PARTIAL — SRT 파싱/Caption 검증 인수 완료; 표시용 분할/렌더 정책 후속
-- 03_Timeline: READY — 파서 인수 완료, Source/Output Resolver 기능 배정 예정
+- 03_Timeline: IN_PROGRESS — Source/Output Resolver 및 심화 검증 기능 지시 전달 완료
 - 04_Scene: BLOCKED
 - 05_Asset: PENDING
 - 06_Theme_Motion: PENDING
@@ -68,3 +68,4 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - constructor/toString/hasOwnProperty 미등록 Asset이 통과하던 오류 수정 및 12개 회귀 테스트 확인.
 - Core COMPLETE는 공통 계약/검증 기능만 의미한다. 실제 미디어 확인·렌더·Timeline Resolver·업로드는 미구현이다.
 - Caption 인수: Master가 typecheck, 전체 87/87 tests(Core 42 + Caption 45), build 및 공개 API 실제 파싱을 직접 검증했다. 원본 SRT/번호/시간 보존과 duration 추론 경고를 확인했다.
+- Caption 기능 커밋 `cc89345`를 main에 푸시했다.
