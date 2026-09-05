@@ -28,7 +28,7 @@
 - 02_Caption: PARTIAL — SRT 파싱/Caption 검증 인수 완료; 표시용 분할/렌더 정책 후속
 - 03_Timeline: COMPLETE — 순수 ms Resolver/심화 검증 인수; Scene outputTiming·frame 변환은 후속
 - 04_Scene: PARTIAL — 순수 Scene Runtime/시점 조회 인수 완료; 시각 컴포넌트/렌더 후속
-- 05_Asset: READY — Asset 선택/Placeholder 판정 기능 배정 예정
+- 05_Asset: IN_PROGRESS — Asset 선택/Preview Placeholder 판정 기능 지시 전달 완료
 - 06_Theme_Motion: PENDING
 - 07_AutoPlanner: BLOCKED
 - 08_ReviewEditor: BLOCKED
@@ -74,3 +74,4 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - Timeline 인수: Master typecheck, 전체 144/144 tests, build, 공개 resolveTimeline/validateResolvedTimeline 호출 통과. 실제 미디어/렌더 검증은 별도다.
 - Timeline 기능 커밋 `e41420e`를 main에 푸시했다.
 - Scene Runtime 인수: Master typecheck, 전체 171/171 tests, build 및 공개 API의 Insert 자막 숨김/종료 경계 검증 통과. 시각 컴포넌트·frame·실제 렌더는 미구현이다.
+- Scene 기능 커밋 `688040c`를 main에 푸시했다.
