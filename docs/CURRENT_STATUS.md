@@ -25,8 +25,8 @@
 
 - 00_Master: ACTIVE — 전체 20개 명세 검토 완료, DECISIONS에 해석 차이 정리
 - 01_Core: COMPLETE — 공통 계약/런타임 검증 최초 기능 인수, Master 42 tests/typecheck/build/public import 통과
-- 02_Caption: IN_PROGRESS — SRT 파싱/Caption 검증 최초 기능 지시 전달 완료
-- 03_Timeline: BLOCKED
+- 02_Caption: PARTIAL — SRT 파싱/Caption 검증 인수 완료; 표시용 분할/렌더 정책 후속
+- 03_Timeline: READY — 파서 인수 완료, Source/Output Resolver 기능 배정 예정
 - 04_Scene: BLOCKED
 - 05_Asset: PENDING
 - 06_Theme_Motion: PENDING
@@ -39,7 +39,7 @@
 
 ## 다음 실행
 
-02_Caption에 Source 불변 SRT 파싱 및 Caption 검증을 배정한다. 기능별 테스트/전체 회귀 검증 후 Master가 커밋/푸시한다.
+03_Timeline에 Source 불변 Output Timeline Resolver를 배정한다. 기능별 테스트/전체 회귀 검증 후 Master가 커밋/푸시한다.
 GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료된 개발 명세다.
 설계 COMPLETE는 개념 명세 작성 완료이며 구현 완료를 뜻하지 않는다.
 
@@ -57,6 +57,7 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - 00_Master: `01a071cb-4b2a-7571-8ce4-0b1416ec49ce`
 - 01_Core: `01a071cb-5d20-7313-94ee-e3a110009b95`
 - 02_Caption: `01a071cb-7e50-7b31-aefa-e8a4bff3db94`
+- 03_Timeline: `01a071cb-9786-79f2-9e13-a83cd16eb6df`
 - 공유 경로: `D:\coding\Short-auto`
 - CURRENT_STATUS / DECISIONS / CHANGELOG는 Master가 관리한다.
 
@@ -66,3 +67,4 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - Core 기능 커밋 `ec5d349`를 main에 푸시하고 원격 SHA 일치를 확인했다.
 - constructor/toString/hasOwnProperty 미등록 Asset이 통과하던 오류 수정 및 12개 회귀 테스트 확인.
 - Core COMPLETE는 공통 계약/검증 기능만 의미한다. 실제 미디어 확인·렌더·Timeline Resolver·업로드는 미구현이다.
+- Caption 인수: Master가 typecheck, 전체 87/87 tests(Core 42 + Caption 45), build 및 공개 API 실제 파싱을 직접 검증했다. 원본 SRT/번호/시간 보존과 duration 추론 경고를 확인했다.

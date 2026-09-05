@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased - Caption 파싱 - 2026-09-06
+
+- parseSrt 및 validateCaptions 공개 API 추가. BOM/CRLF/LF와 한일 다중행 원문, 번호 및 ms 시간을 보존한다.
+- 잘못된 번호/시간/중복/겹침/순서를 진단하고 실제 미디어 길이와 마지막 cue 기반 추론을 구분한다.
+- Master 검증: 기존 Core 포함 87개 테스트, 타입 검사, 빌드와 공개 import/파싱 통과. 자막 표시용 분할과 렌더는 후속 범위다.
+
 ## 0.1.0 - 2026-09-06
 
 - 공통 TypeScript/JSON 모델, 런타임 구조·참조·관계 검증, 승인 revision과 Asset 준비 상태 검사 추가.

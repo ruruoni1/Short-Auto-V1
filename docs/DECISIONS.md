@@ -1,5 +1,11 @@
 # DECISIONS
 
+## 2026-09-06 — Caption 파싱 기능 인수
+
+- CAPTION_CONTRACT.md의 strict SRT 파싱/진단 계약을 인수한다. 오류 시 부분 SourceTimeline을 반환하지 않는다. 자동 재번호/정렬/시간 보정 없이 원문을 보존한다.
+- source duration을 미입력하면 마지막 cue로만 추론하고 warning/provenance를 남긴다. 이 값을 실제 TTS 길이로 간주하지 않는다. 저장/Timeline 호출 계층이 실제 길이 및 provenance를 관리한다.
+- 이번 기능은 SRT 파싱과 검증이다. 표시용 분할/렌더는 후속으로 남기고 SourceTimeline 계약을 사용하는 03_Timeline을 진행한다.
+
 ## 2026-09-06 — Core 0.1.0 인수
 
 - CORE_CONTRACT.md의 최소 계약을 후속 구현 기준으로 인수한다. 영숫자 기반 ID, 명시적 Insert duration/trim, 정규화된 Overrides(global/scenes/inserts), 같은 Pack 내 파생 및 Content↔Project 일대일 연결을 초기 범위로 사용한다.
