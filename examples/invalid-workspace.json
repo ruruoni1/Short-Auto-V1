@@ -1,0 +1,354 @@
+{
+  "packs": [
+    {
+      "id": "nihon_zupzup",
+      "version": "1.0",
+      "profiles": [
+        {
+          "id": "anime_analysis",
+          "contentType": "discovery_long"
+        },
+        {
+          "id": "drama_analysis",
+          "contentType": "discovery_long"
+        },
+        {
+          "id": "practical_explainer",
+          "contentType": "discovery_long"
+        },
+        {
+          "id": "wasei_eigo",
+          "contentType": "discovery_long"
+        },
+        {
+          "id": "dialect",
+          "contentType": "discovery_long"
+        },
+        {
+          "id": "trend",
+          "contentType": "discovery_long"
+        },
+        {
+          "id": "shadowing_training",
+          "contentType": "training_long"
+        },
+        {
+          "id": "repetition_training",
+          "contentType": "training_long"
+        },
+        {
+          "id": "practical_dialogue_training",
+          "contentType": "training_long"
+        },
+        {
+          "id": "anime_discovery_short",
+          "contentType": "discovery_short"
+        },
+        {
+          "id": "drama_discovery_short",
+          "contentType": "discovery_short"
+        },
+        {
+          "id": "dialect_discovery_short",
+          "contentType": "discovery_short"
+        },
+        {
+          "id": "trend_discovery_short",
+          "contentType": "discovery_short"
+        },
+        {
+          "id": "wasei_discovery_short",
+          "contentType": "discovery_short"
+        },
+        {
+          "id": "phrase_learning_short",
+          "contentType": "learning_short"
+        },
+        {
+          "id": "vocabulary_learning_short",
+          "contentType": "learning_short"
+        },
+        {
+          "id": "pronunciation_learning_short",
+          "contentType": "learning_short"
+        }
+      ],
+      "themes": [
+        {
+          "id": "nihon-discovery-v1",
+          "fontPrimaryKR": "sans-serif",
+          "fontPrimaryJP": "sans-serif",
+          "fontCaption": "sans-serif",
+          "fontNumber": "sans-serif",
+          "colors": {
+            "background": "#ffffff",
+            "foreground": "#111111"
+          },
+          "defaultTransition": "CUT"
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "production": {
+        "schemaVersion": "1.0",
+        "project": {
+          "id": "NZ001",
+          "title": "표현과 관계",
+          "contentType": "discovery_long",
+          "language": "ko",
+          "channelPack": "nihon_zupzup",
+          "contentProfile": "anime_analysis",
+          "status": "draft",
+          "revision": 0,
+          "origin": {
+            "sourceType": "independent"
+          }
+        },
+        "audio": {
+          "tts": "audio/tts.wav",
+          "volume": 1
+        },
+        "captions": {
+          "source": "audio/tts.srt",
+          "parsed": "data/captions.json",
+          "show": true
+        },
+        "settings": {
+          "fps": 30,
+          "width": 1920,
+          "height": 1080,
+          "theme": "nihon-discovery-v1",
+          "captionStyle": "default",
+          "transitionStyle": "default"
+        },
+        "assets": {
+          "clip01": {
+            "type": "anime_clip",
+            "status": "required",
+            "metadata": {
+              "title": "테스트용 가상 자료"
+            }
+          }
+        },
+        "scenes": [
+          {
+            "id": "scene_001",
+            "type": "EXPLAIN",
+            "locked": false,
+            "confidence": 0.9,
+            "captionRange": {
+              "start": 1,
+              "end": 2
+            },
+            "captionMode": "normal",
+            "content": {
+              "mainText": "관계에 따라",
+              "subText": null,
+              "jpText": null,
+              "emphasis": []
+            },
+            "visual": {
+              "strategy": "text_only",
+              "assetId": null
+            },
+            "motion": null
+          }
+        ],
+        "inserts": [
+          {
+            "id": "insert_001",
+            "type": "ANIME_CLIP",
+            "timingMode": "insert",
+            "anchor": {
+              "type": "source_time",
+              "timeMs": 1000
+            },
+            "assetId": "clip01",
+            "durationMs": 1000
+          }
+        ],
+        "ending": {
+          "enabled": false,
+          "durationMs": 0,
+          "type": "discovery_end",
+          "message": ""
+        }
+      },
+      "source": {
+        "durationMs": 4000,
+        "captions": [
+          {
+            "id": 1,
+            "startMs": 0,
+            "endMs": 2000,
+            "text": "표현은 관계에 따라 달라집니다."
+          },
+          {
+            "id": 2,
+            "startMs": 2000,
+            "endMs": 4000,
+            "text": "상황도 함께 살펴봅니다."
+          }
+        ]
+      },
+      "overrides": {
+        "schemaVersion": "1.0",
+        "projectId": "NZ001",
+        "revision": 0,
+        "global": {},
+        "scenes": {},
+        "inserts": {}
+      }
+    },
+    {
+      "production": {
+        "schemaVersion": "1.0",
+        "project": {
+          "id": "NZ001_S1",
+          "title": "표현과 관계",
+          "contentType": "discovery_short",
+          "language": "ko",
+          "channelPack": "nihon_zupzup",
+          "contentProfile": "anime_discovery_short",
+          "status": "draft",
+          "revision": 0,
+          "origin": {
+            "sourceType": "derived",
+            "sourceLongProjectId": "NZ001",
+            "derivativeIndex": 1,
+            "derivativeReason": "관계에 따른 의미 차이를 한 질문으로 재구성"
+          }
+        },
+        "audio": {
+          "tts": "audio/tts.wav",
+          "volume": 1
+        },
+        "captions": {
+          "source": "audio/tts.srt",
+          "parsed": "data/captions.json",
+          "show": true
+        },
+        "settings": {
+          "fps": 30,
+          "width": 1080,
+          "height": 1920,
+          "theme": "nihon-discovery-v1",
+          "captionStyle": "default",
+          "transitionStyle": "default"
+        },
+        "assets": {
+          "clip01": {
+            "type": "anime_clip",
+            "status": "required",
+            "metadata": {
+              "title": "테스트용 가상 자료"
+            }
+          }
+        },
+        "scenes": [
+          {
+            "id": "scene_001",
+            "type": "EXPLAIN",
+            "locked": false,
+            "confidence": 0.9,
+            "captionRange": {
+              "start": 1,
+              "end": 2
+            },
+            "captionMode": "normal",
+            "content": {
+              "mainText": "관계에 따라",
+              "subText": null,
+              "jpText": null,
+              "emphasis": []
+            },
+            "visual": {
+              "strategy": "text_only",
+              "assetId": null
+            },
+            "motion": null
+          }
+        ],
+        "inserts": [
+          {
+            "id": "insert_001",
+            "type": "ANIME_CLIP",
+            "timingMode": "insert",
+            "anchor": {
+              "type": "caption_after",
+              "captionId": 1
+            },
+            "assetId": "clip01",
+            "durationMs": 1000
+          }
+        ],
+        "ending": {
+          "enabled": false,
+          "durationMs": 0,
+          "type": "discovery_end",
+          "message": ""
+        }
+      },
+      "source": {
+        "durationMs": 4000,
+        "captions": [
+          {
+            "id": 1,
+            "startMs": 0,
+            "endMs": 2000,
+            "text": "표현은 관계에 따라 달라집니다."
+          },
+          {
+            "id": 2,
+            "startMs": 2000,
+            "endMs": 4000,
+            "text": "상황도 함께 살펴봅니다."
+          }
+        ]
+      },
+      "overrides": {
+        "schemaVersion": "1.0",
+        "projectId": "NZ001_S1",
+        "revision": 0,
+        "global": {},
+        "scenes": {},
+        "inserts": {}
+      }
+    }
+  ],
+  "contents": [
+    {
+      "id": "content_long_001",
+      "title": "표현과 관계",
+      "contentType": "discovery_long",
+      "contentProfile": "anime_analysis",
+      "channelPack": "nihon_zupzup",
+      "productionProjectId": "NZ001",
+      "status": "planned",
+      "relationship": {
+        "sourceType": "independent"
+      },
+      "derivedShortIds": [
+        "content_short_001"
+      ],
+      "relatedContentIds": []
+    },
+    {
+      "id": "content_short_001",
+      "title": "관계에 따른 표현",
+      "contentType": "discovery_short",
+      "contentProfile": "anime_discovery_short",
+      "channelPack": "nihon_zupzup",
+      "productionProjectId": "NZ001_S1",
+      "status": "planned",
+      "relationship": {
+        "sourceType": "derived",
+        "parentLongId": "content_long_001"
+      },
+      "derivedShortIds": [],
+      "relatedContentIds": []
+    }
+  ]
+}

@@ -1,5 +1,12 @@
 # DECISIONS
 
+## 2026-09-06 — Core 0.1.0 인수
+
+- CORE_CONTRACT.md의 최소 계약을 후속 구현 기준으로 인수한다. 영숫자 기반 ID, 명시적 Insert duration/trim, 정규화된 Overrides(global/scenes/inserts), 같은 Pack 내 파생 및 Content↔Project 일대일 연결을 초기 범위로 사용한다.
+- Editor/저장 계층은 수정 시 revision을 올리고 승인을 무효화해야 한다. Core의 최종 준비 판정은 데이터 계약 검증이며 실제 파일/렌더 성공 증거가 아니다.
+- Timeline 완전성은 03_Timeline, 채널 디자인은 06_Theme_Motion, 업로드 실행은 10_YouTube 후속 범위다. 초기 Profile은 17개 ID/포맷 매핑만 확정한다.
+- Dictionary 참조는 own-property로 조회한다. Object prototype의 이름도 명시 등록된 경우에만 유효하다.
+
 ## 2026-09-05 — Master 최초 명세 검토
 
 - 사용자 확정 개발 규칙: 기능 단위로 테스트 후 커밋한다. Master는 해당 기능 및 영향 범위 검증 결과를 확인하고 관련 문서를 갱신한 뒤 기능별 커밋/푸시를 관리한다. 전체 모듈 완료를 커밋의 필수 조건으로 두지 않는다.

@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.1.0 - 2026-09-06
+
+- 공통 TypeScript/JSON 모델, 런타임 구조·참조·관계 검증, 승인 revision과 Asset 준비 상태 검사 추가.
+- 범용 Core와 니혼줍줍 17개 Profile 등록 데이터 분리, Long/Short 샘플 및 공개 ESM export 제공.
+- 미등록 prototype 이름을 Asset으로 인정하던 오류 수정.
+- Master 검증: 42개 테스트, 타입 검사, 빌드, 공개 import 통과. 영상 제작 UI/실제 렌더 기능은 아직 포함하지 않음.
+
 ## Unreleased - 2026-09-05
 
 - Master가 전체 20개 명세 검토를 완료하고 제작/운영 상태, Profile ID, Pack 참조, Long/Short ID 관계, Timeline 및 Preview 검증 경계를 정리했다.

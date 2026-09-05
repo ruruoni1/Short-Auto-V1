@@ -1,6 +1,6 @@
 # CURRENT_STATUS
 
-작성일: 2026-09-05
+작성일: 2026-09-06
 문서 버전: v1.1
 
 ## 설계
@@ -24,8 +24,8 @@
 ## 구현
 
 - 00_Master: ACTIVE — 전체 20개 명세 검토 완료, DECISIONS에 해석 차이 정리
-- 01_Core: IN_PROGRESS — 최초 구현 지시 전달 완료, 테스트/인수 검토 대기
-- 02_Caption: BLOCKED
+- 01_Core: COMPLETE — 공통 계약/런타임 검증 최초 기능 인수, Master 42 tests/typecheck/build/public import 통과
+- 02_Caption: READY — Core 인수 완료, SRT 파싱/Caption 검증 최초 기능 배정 예정
 - 03_Timeline: BLOCKED
 - 04_Scene: BLOCKED
 - 05_Asset: PENDING
@@ -39,7 +39,7 @@
 
 ## 다음 실행
 
-01_Core에서 검증 가능한 기능 단위가 완료될 때마다 결과를 검토하고 해당 테스트/타입 검사 및 영향 범위 회귀 검증 후 기능별 커밋/푸시를 진행한다.
+02_Caption에 Source 불변 SRT 파싱 및 Caption 검증을 배정한다. 기능별 테스트/전체 회귀 검증 후 Master가 커밋/푸시한다.
 GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료된 개발 명세다.
 설계 COMPLETE는 개념 명세 작성 완료이며 구현 완료를 뜻하지 않는다.
 
@@ -58,3 +58,9 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - 01_Core: `01a071cb-5d20-7313-94ee-e3a110009b95`
 - 공유 경로: `D:\coding\Short-auto`
 - CURRENT_STATUS / DECISIONS / CHANGELOG는 Master가 관리한다.
+
+## 검증 기록 — 2026-09-06
+
+- Master가 npm run typecheck, npm test(42/42), npm run build, 두 공개 ESM export import를 직접 실행해 통과 확인.
+- constructor/toString/hasOwnProperty 미등록 Asset이 통과하던 오류 수정 및 12개 회귀 테스트 확인.
+- Core COMPLETE는 공통 계약/검증 기능만 의미한다. 실제 미디어 확인·렌더·Timeline Resolver·업로드는 미구현이다.
