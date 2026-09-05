@@ -27,8 +27,8 @@
 - 01_Core: COMPLETE — 공통 계약/런타임 검증 최초 기능 인수, Master 42 tests/typecheck/build/public import 통과
 - 02_Caption: PARTIAL — SRT 파싱/Caption 검증 인수 완료; 표시용 분할/렌더 정책 후속
 - 03_Timeline: COMPLETE — 순수 ms Resolver/심화 검증 인수; Scene outputTiming·frame 변환은 후속
-- 04_Scene: IN_PROGRESS — 렌더 독립 Scene Runtime/시점 조회 기능 지시 전달 완료
-- 05_Asset: PENDING
+- 04_Scene: PARTIAL — 순수 Scene Runtime/시점 조회 인수 완료; 시각 컴포넌트/렌더 후속
+- 05_Asset: READY — Asset 선택/Placeholder 판정 기능 배정 예정
 - 06_Theme_Motion: PENDING
 - 07_AutoPlanner: BLOCKED
 - 08_ReviewEditor: BLOCKED
@@ -39,7 +39,7 @@
 
 ## 다음 실행
 
-04_Scene에 Scene Runtime 최초 기능을 배정한다. 기능별 테스트/전체 회귀 검증 후 Master가 커밋/푸시한다.
+05_Asset에 Asset 선택/Placeholder 판정 기능을 배정한다. 기능별 테스트/전체 회귀 검증 후 Master가 커밋/푸시한다.
 GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료된 개발 명세다.
 설계 COMPLETE는 개념 명세 작성 완료이며 구현 완료를 뜻하지 않는다.
 
@@ -59,6 +59,7 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - 02_Caption: `01a071cb-7e50-7b31-aefa-e8a4bff3db94`
 - 03_Timeline: `01a071cb-9786-79f2-9e13-a83cd16eb6df`
 - 04_Scene: `01a071cb-b22b-7332-a3ca-9873448b3aeb`
+- 05_Asset: `01a071cb-d82c-7c32-9b41-6adbcc003900`
 - 공유 경로: `D:\coding\Short-auto`
 - CURRENT_STATUS / DECISIONS / CHANGELOG는 Master가 관리한다.
 
@@ -72,3 +73,4 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - Caption 기능 커밋 `cc89345`를 main에 푸시했다.
 - Timeline 인수: Master typecheck, 전체 144/144 tests, build, 공개 resolveTimeline/validateResolvedTimeline 호출 통과. 실제 미디어/렌더 검증은 별도다.
 - Timeline 기능 커밋 `e41420e`를 main에 푸시했다.
+- Scene Runtime 인수: Master typecheck, 전체 171/171 tests, build 및 공개 API의 Insert 자막 숨김/종료 경계 검증 통과. 시각 컴포넌트·frame·실제 렌더는 미구현이다.

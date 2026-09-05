@@ -1,5 +1,12 @@
 # DECISIONS
 
+## 2026-09-06 — 순수 Scene Runtime 인수
+
+- SCENE_CONTRACT.md의 계획/조회 계약을 인수한다. sparse Caption ID의 Source 범위를 TTS Output 구간에 매핑하고 모든 구간은 [start,end)로 처리한다.
+- 중첩 Scene은 원본 배열 순서로 모두 반환하고 미할당을 임의 Scene으로 채우지 않는다. 정지 Insert/Pause에서는 Source Scene/Caption을 반환하지 않으며 Overlay는 병렬 상태다.
+- Caption offsetY는 local > global > 0, Motion은 override > original > 주입 정책 > 결정적 기본값 순서다. 원본 Caption과 표시용 lines를 분리한다.
+- Runtime은 입력 snapshot을 사용한다. 반환 상태 변경이 다음 조회에 영향을 주지 않는다. 시각 컴포넌트와 실제 렌더는 별도 기능으로 관리한다.
+
 ## 2026-09-06 — Timeline Resolver 인수
 
 - TIMELINE_CONTRACT.md의 ms 계산/검증 정책을 인수한다. 같은 Source anchor의 정지 Insert는 배열 순서, Overlay는 해당 anchor의 정지 Insert가 모두 끝난 뒤 시작한다.

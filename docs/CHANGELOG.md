@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased - Scene Runtime - 2026-09-06
+
+- 9개 Scene Type의 순수 계획/시점 조회와 표시 Override 합성 추가.
+- Source 무음/정지 Insert/Overlay/ending 및 Caption 노출 상태를 분리하고 원문을 보존한다.
+- Master 검증: 전체 171개 테스트, 타입 검사, 빌드, 공개 API 경계 확인 통과. 시각 컴포넌트 및 렌더는 미포함.
+
 ## Unreleased - Timeline - 2026-09-06
 
 - Source 전체를 보존하며 Insert/Pause/Overlay/trim/ending을 계산하는 resolveTimeline 추가.
