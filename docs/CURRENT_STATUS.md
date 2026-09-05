@@ -27,7 +27,7 @@
 - 01_Core: COMPLETE — 공통 계약/런타임 검증 최초 기능 인수, Master 42 tests/typecheck/build/public import 통과
 - 02_Caption: PARTIAL — SRT 파싱/Caption 검증 인수 완료; 표시용 분할/렌더 정책 후속
 - 03_Timeline: COMPLETE — 순수 ms Resolver/심화 검증 인수; Scene outputTiming·frame 변환은 후속
-- 04_Scene: READY — Scene Runtime 최초 기능 배정 예정
+- 04_Scene: IN_PROGRESS — 렌더 독립 Scene Runtime/시점 조회 기능 지시 전달 완료
 - 05_Asset: PENDING
 - 06_Theme_Motion: PENDING
 - 07_AutoPlanner: BLOCKED
@@ -71,3 +71,4 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - Caption 인수: Master가 typecheck, 전체 87/87 tests(Core 42 + Caption 45), build 및 공개 API 실제 파싱을 직접 검증했다. 원본 SRT/번호/시간 보존과 duration 추론 경고를 확인했다.
 - Caption 기능 커밋 `cc89345`를 main에 푸시했다.
 - Timeline 인수: Master typecheck, 전체 144/144 tests, build, 공개 resolveTimeline/validateResolvedTimeline 호출 통과. 실제 미디어/렌더 검증은 별도다.
+- Timeline 기능 커밋 `e41420e`를 main에 푸시했다.
