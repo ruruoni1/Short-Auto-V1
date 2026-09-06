@@ -29,7 +29,7 @@
 - 03_Timeline: COMPLETE — 순수 ms Resolver/심화 검증 인수; Scene outputTiming·frame 변환은 후속
 - 04_Scene: PARTIAL — 순수 Scene Runtime/시점 조회 인수 완료; 시각 컴포넌트/렌더 후속
 - 05_Asset: PARTIAL — Registry/선택/Preview Placeholder 판정 인수; 파일 확인·생성·렌더 연동 후속
-- 06_Theme_Motion: READY — Theme/Motion 최초 기능 배정 예정
+- 06_Theme_Motion: IN_PROGRESS — Theme 선택 및 결정적 Motion 계산 기능 지시 전달 완료
 - 07_AutoPlanner: BLOCKED
 - 08_ReviewEditor: BLOCKED
 - 09_Content_Manager: BLOCKED
@@ -77,3 +77,4 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - Scene Runtime 인수: Master typecheck, 전체 171/171 tests, build 및 공개 API의 Insert 자막 숨김/종료 경계 검증 통과. 시각 컴포넌트·frame·실제 렌더는 미구현이다.
 - Scene 기능 커밋 `688040c`를 main에 푸시했다.
 - Asset 인수: Master typecheck, 전체 213/213 tests, build, 공개 API/Placeholder/최종 Asset 조건 구분 검증 통과. 실제 파일/생성/렌더 검증은 미수행.
+- Asset 기능 커밋 `06a37c6`를 main에 푸시했다.
