@@ -1,5 +1,11 @@
 # DECISIONS
 
+## 2026-09-06 — Theme/Motion 계산 인수 및 Phase 1 렌더 연결
+
+- THEME_MOTION_CONTRACT.md의 주입 Theme 선택/우선순위와 순수 시간 계산 계약을 인수한다. 기존 Scene override/원본을 주입 기본값보다 우선한다.
+- 7 Motion preset과 CUT/FADE/PUSH 수식을 지원한다. STAGGER는 item 문맥이 필요하며 FREEZE_FOCUS/MATCH는 명시 미지원이다. 실제 화면 동작 완료로 취급하지 않는다.
+- Phase 1의 PARTIAL 항목을 남긴 채 AutoPlanner 완료를 추진하지 않는다. 04_Scene의 다음 기능은 실제 React/Remotion 컴포넌트·Preview·테스트 렌더이며 합성 fixture로 검증한다.
+
 ## 2026-09-06 — Asset 선택 기능 인수
 
 - ASSET_CONTRACT.md 인수. 명시 none/text_only/asset/generated_graphic 전략은 유지하고 auto에서만 ready 시각 Asset → 지원 graphic 계획 → 표시 텍스트 → 생성/수집 요청을 적용한다.

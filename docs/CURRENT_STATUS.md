@@ -29,7 +29,7 @@
 - 03_Timeline: COMPLETE — 순수 ms Resolver/심화 검증 인수; Scene outputTiming·frame 변환은 후속
 - 04_Scene: PARTIAL — 순수 Scene Runtime/시점 조회 인수 완료; 시각 컴포넌트/렌더 후속
 - 05_Asset: PARTIAL — Registry/선택/Preview Placeholder 판정 인수; 파일 확인·생성·렌더 연동 후속
-- 06_Theme_Motion: IN_PROGRESS — Theme 선택 및 결정적 Motion 계산 기능 지시 전달 완료
+- 06_Theme_Motion: PARTIAL — Theme 선택/7 Motion·3 Transition 계산 인수; FREEZE_FOCUS/MATCH·시각 적용 후속
 - 07_AutoPlanner: BLOCKED
 - 08_ReviewEditor: BLOCKED
 - 09_Content_Manager: BLOCKED
@@ -39,7 +39,7 @@
 
 ## 다음 실행
 
-06_Theme_Motion에 Theme 선택 및 결정적 Motion 계산 기능을 배정한다. 기능별 테스트/전체 회귀 검증 후 Master가 커밋/푸시한다.
+Phase 1의 순수 계산 기반이 마련되었다. 04_Scene에 React/Remotion 시각 컴포넌트와 Preview 테스트 렌더 연결을 배정하여 남은 렌더 기능을 검증한다. AutoPlanner로 넘어가기 전에 실제 영상 출력 기반을 확보한다.
 GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료된 개발 명세다.
 설계 COMPLETE는 개념 명세 작성 완료이며 구현 완료를 뜻하지 않는다.
 
@@ -78,3 +78,4 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - Scene 기능 커밋 `688040c`를 main에 푸시했다.
 - Asset 인수: Master typecheck, 전체 213/213 tests, build, 공개 API/Placeholder/최종 Asset 조건 구분 검증 통과. 실제 파일/생성/렌더 검증은 미수행.
 - Asset 기능 커밋 `06a37c6`를 main에 푸시했다.
+- Theme/Motion 인수: Master typecheck, 전체 278/278 tests, build, 공개 Theme/Runtime/Motion/Transition 호출 통과. FREEZE_FOCUS/MATCH 및 실제 렌더는 미구현이다.

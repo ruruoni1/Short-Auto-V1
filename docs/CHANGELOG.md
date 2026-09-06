@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased - Theme/Motion - 2026-09-06
+
+- Pack 기반 Theme/font role/color 선택 및 Scene Runtime 연동 추가.
+- 7개 Motion preset, CUT/FADE/PUSH의 결정적 시간 계산 추가. FREEZE_FOCUS/MATCH는 미지원 진단 반환.
+- Master 검증: 전체 278개 테스트, 타입 검사, 빌드, 공개 API 통과. 폰트 가용성·실제 시각 렌더는 후속 범위.
+
 ## Unreleased - Asset Resolver - 2026-09-06
 
 - Asset Registry 검증, 명시 시각 전략 보존, auto 대체 선택과 Preview Placeholder/생성 요청 계획 추가.
