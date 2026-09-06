@@ -27,7 +27,7 @@
 - 01_Core: COMPLETE — 공통 계약/런타임 검증 최초 기능 인수, Master 42 tests/typecheck/build/public import 통과
 - 02_Caption: PARTIAL — SRT 파싱/Caption 검증 인수 완료; 표시용 분할/렌더 정책 후속
 - 03_Timeline: COMPLETE — 순수 ms Resolver/심화 검증 인수; Scene outputTiming·frame 변환은 후속
-- 04_Scene: PARTIAL — 순수 Scene Runtime/시점 조회 인수 완료; 시각 컴포넌트/렌더 후속
+- 04_Scene: IN_PROGRESS — 순수 Runtime 인수 완료; React/Remotion 시각 컴포넌트·Preview 테스트 렌더 지시 전달 완료
 - 05_Asset: PARTIAL — Registry/선택/Preview Placeholder 판정 인수; 파일 확인·생성·렌더 연동 후속
 - 06_Theme_Motion: PARTIAL — Theme 선택/7 Motion·3 Transition 계산 인수; FREEZE_FOCUS/MATCH·시각 적용 후속
 - 07_AutoPlanner: BLOCKED
@@ -79,3 +79,4 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - Asset 인수: Master typecheck, 전체 213/213 tests, build, 공개 API/Placeholder/최종 Asset 조건 구분 검증 통과. 실제 파일/생성/렌더 검증은 미수행.
 - Asset 기능 커밋 `06a37c6`를 main에 푸시했다.
 - Theme/Motion 인수: Master typecheck, 전체 278/278 tests, build, 공개 Theme/Runtime/Motion/Transition 호출 통과. FREEZE_FOCUS/MATCH 및 실제 렌더는 미구현이다.
+- Theme/Motion 기능 로컬 커밋: `8f4a2eb`.
