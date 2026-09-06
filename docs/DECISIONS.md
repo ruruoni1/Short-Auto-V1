@@ -1,5 +1,11 @@
 # DECISIONS
 
+## 2026-09-06 — Asset 선택 기능 인수
+
+- ASSET_CONTRACT.md 인수. 명시 none/text_only/asset/generated_graphic 전략은 유지하고 auto에서만 ready 시각 Asset → 지원 graphic 계획 → 표시 텍스트 → 생성/수집 요청을 적용한다.
+- 미등록 참조는 오류, registered required/missing/rejected는 상태를 보존한 Preview 판정이다. graphic 지원 선언과 요청 반환은 실제 생성 증거가 아니다.
+- finalAssetReadiness는 Core의 보수적 참조/required 조건과 Placeholder/미검증 graphic 조건을 검사한다. 승인·실제 파일·렌더 검증과 구분한다.
+
 ## 2026-09-06 — 순수 Scene Runtime 인수
 
 - SCENE_CONTRACT.md의 계획/조회 계약을 인수한다. sparse Caption ID의 Source 범위를 TTS Output 구간에 매핑하고 모든 구간은 [start,end)로 처리한다.

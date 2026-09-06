@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased - Asset Resolver - 2026-09-06
+
+- Asset Registry 검증, 명시 시각 전략 보존, auto 대체 선택과 Preview Placeholder/생성 요청 계획 추가.
+- 원래 Asset 상태·출처·Override를 보존하고 Preview와 최종 Asset 데이터 준비 조건을 구분한다.
+- Master 검증: 전체 213개 테스트, 타입 검사, 빌드, 공개 API 통과. 파일 접근·생성·렌더는 미포함.
+
 ## Unreleased - Scene Runtime - 2026-09-06
 
 - 9개 Scene Type의 순수 계획/시점 조회와 표시 Override 합성 추가.
