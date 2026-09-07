@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Unreleased - Remotion Preview - 2026-09-06
+
+- 별도 render 진입점, 9종 최소 Scene, 가로/세로 Composition 및 합성 자산 재현 스크립트 추가.
+- Timeline/Caption/Asset/ThemeMotion을 실제 React/Remotion 화면과 오디오 Sequence에 연결.
+- Master 검증: 300개 테스트, 타입 검사·빌드, 가로/세로 13초 MP4 전체 decode·오디오 stop/resume·대표 프레임 확인 통과.
+- Preview 전용이며 사용자 최종 제작/승인 렌더, 장문 자막 fit, 정밀 오디오 trim은 후속.
+
 ## Unreleased - Theme/Motion - 2026-09-06
 
 - Pack 기반 Theme/font role/color 선택 및 Scene Runtime 연동 추가.

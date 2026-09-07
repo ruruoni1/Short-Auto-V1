@@ -11,21 +11,37 @@
     "./nihon-zupzup": {
       "types": "./dist/channel-packs/nihon-zupzup/index.d.ts",
       "import": "./dist/channel-packs/nihon-zupzup/index.js"
+    },
+    "./render": {
+      "types": "./dist/src/render/index.d.ts",
+      "import": "./dist/src/render/index.js"
     }
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "render:assets": "tsx src/render/fixture/generate.ts",
+    "preview": "remotion studio src/render/register.tsx --public-dir=remotion/public --no-open",
+    "render:fixture": "remotion render src/render/register.tsx ScenePreviewLandscape dist/render/scene-preview-landscape.mp4 --public-dir=remotion/public --concurrency=2",
+    "render:portrait": "remotion render src/render/register.tsx ScenePreviewPortrait dist/render/scene-preview-portrait.mp4 --public-dir=remotion/public --concurrency=2",
+    "render:verify": "tsx src/render/fixture/verify.ts"
   },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
+    "@remotion/cli": "4.0.521",
+    "@remotion/media": "4.0.521",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.521",
     "zod": "^4.5.4"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",
+    "@types/react": "19.2.0",
+    "@types/react-dom": "19.2.0",
     "tsx": "^4.23.13",
     "typescript": "5.9"
   }

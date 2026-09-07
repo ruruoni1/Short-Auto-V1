@@ -27,7 +27,7 @@
 - 01_Core: COMPLETE — 공통 계약/런타임 검증 최초 기능 인수, Master 42 tests/typecheck/build/public import 통과
 - 02_Caption: PARTIAL — SRT 파싱/Caption 검증 인수 완료; 표시용 분할/렌더 정책 후속
 - 03_Timeline: COMPLETE — 순수 ms Resolver/심화 검증 인수; Scene outputTiming·frame 변환은 후속
-- 04_Scene: IN_PROGRESS — 순수 Runtime 인수 완료; React/Remotion 시각 컴포넌트·Preview 테스트 렌더 지시 전달 완료
+- 04_Scene: PARTIAL — 9종 최소 React/Remotion Preview 및 가로/세로 실제 테스트 렌더 인수; 사용자 Final Render·자유 layout 후속
 - 05_Asset: PARTIAL — Registry/선택/Preview Placeholder 판정 인수; 파일 확인·생성·렌더 연동 후속
 - 06_Theme_Motion: PARTIAL — Theme 선택/7 Motion·3 Transition 계산 인수; FREEZE_FOCUS/MATCH·시각 적용 후속
 - 07_AutoPlanner: BLOCKED
@@ -39,7 +39,7 @@
 
 ## 다음 실행
 
-Phase 1의 순수 계산 기반이 마련되었다. 04_Scene에 React/Remotion 시각 컴포넌트와 Preview 테스트 렌더 연결을 배정하여 남은 렌더 기능을 검증한다. AutoPlanner로 넘어가기 전에 실제 영상 출력 기반을 확보한다.
+가로/세로 합성 Preview 렌더 기반을 검증했다. 다음은 02_Caption의 Source 불변 표시용 분할 기능이다. 사용자 Final Render/승인·정밀 오디오 trim·FREEZE_FOCUS/MATCH는 별도 후속이며 Phase 1 전체 완료로 처리하지 않는다.
 GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료된 개발 명세다.
 설계 COMPLETE는 개념 명세 작성 완료이며 구현 완료를 뜻하지 않는다.
 
@@ -80,3 +80,5 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - Asset 기능 커밋 `06a37c6`를 main에 푸시했다.
 - Theme/Motion 인수: Master typecheck, 전체 278/278 tests, build, 공개 Theme/Runtime/Motion/Transition 호출 통과. FREEZE_FOCUS/MATCH 및 실제 렌더는 미구현이다.
 - Theme/Motion 기능 로컬 커밋: `8f4a2eb`.
+- Render 연결 인수: Master typecheck, 전체 300/300 tests, build 통과. render:verify 재실행으로 두 MP4 전체 decode/오디오 stop-resume 검증 통과 및 가로/세로 contact sheet 직접 확인.
+- 실제 출력: dist/render/scene-preview-landscape.mp4(1280×720), scene-preview-portrait.mp4(720×1280), 각 390 frames/30fps/영상 13초. 합성 테스트음 사용이며 실제 내레이션/사용자 최종 영상은 아니다.

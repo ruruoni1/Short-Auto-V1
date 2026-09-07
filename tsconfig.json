@@ -1,8 +1,22 @@
 {
   "compilerOptions": {
-    "target": "ES2022", "module": "NodeNext", "moduleResolution": "NodeNext",
-    "strict": true, "noUncheckedIndexedAccess": true, "exactOptionalPropertyTypes": true,
-    "declaration": true, "outDir": "dist", "rootDir": ".", "skipLibCheck": true
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "skipLibCheck": true,
+    "jsx": "react-jsx"
   },
-  "include": ["src/**/*.ts", "channel-packs/**/*.ts", "tests/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "channel-packs/**/*.ts",
+    "tests/**/*.ts",
+    "src/**/*.tsx",
+    "remotion.config.ts"
+  ]
 }

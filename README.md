@@ -2,7 +2,7 @@
 
 Node.js/TypeScript 공통 데이터 계약 패키지 (`@short-auto/core`, 0.1.0).
 React/Remotion/Electron 후속 모듈이 같은 Schema와 타입을 가져다 사용합니다.
-현재 구현은 모델·런타임 검증과 SRT 파싱이며 영상 생성 앱이나 렌더러가 아닙니다.
+순수 Core는 모델·검증·Caption·Timeline·Scene·Asset·Theme/Motion을 제공하며, 별도 React/Remotion 진입점에서 합성 fixture Preview/MP4 테스트 렌더를 실행할 수 있습니다. 전체 영상 제작 앱은 아직 구현 중입니다.
 
 ## 실행
 
@@ -62,3 +62,23 @@ console.log(result.diagnostics, result.duration);
 duration을 생략하면 마지막 cue 종료 시각만 추론하고 warning을 반환합니다. 실제 TTS 길이를 보증하지 않습니다.
 원문은 `originalSrt`, 원본 cue와 위치는 `cues`에 보존합니다. 오류가 있으면 `source`는 null이며 자동 재번호·시간 수정·분할을 하지 않습니다.
 지원 문법과 진단 코드는 [Caption 계약](docs/CAPTION_CONTRACT.md)을 참고하세요.
+
+## React/Remotion Scene Preview 테스트
+
+순수 Core와 별도인 `@short-auto/core/render` 진입점을 제공합니다. 9개 Scene type과 합성 미디어를 사용하는 테스트 Composition이며, 사용자 제작의 승인된 Final Render 기능은 아닙니다.
+
+FFmpeg/FFprobe를 PATH에 설치한 후 프로젝트 루트에서 실행합니다.
+
+```sh
+npm run render:assets
+npm run preview
+npm run render:fixture
+npm run render:portrait
+npm run render:verify
+```
+
+Studio에서 `ScenePreviewLandscape`(1280×720), `ScenePreviewPortrait`(720×1280)를 선택합니다. 둘 다 30fps, 영상 13초입니다. Preview URL은 실행 콘솔을 확인하세요. 출력 MP4와 probe/전체 decode/오디오 검사/대표 프레임 증거는 `dist/render/`에 생성됩니다.
+
+합성 자료는 직접 만든 도형 영상·이미지·테스트음이며 실제 TTS 음성이나 사용자 미디어가 아닙니다. `remotion/public/` 생성물은 기존 파일을 덮어쓰지 않습니다. FREEZE_FOCUS/MATCH, 동시 Scene 레이아웃, Scene 내 비디오는 명시 오류로 남습니다. 임시 Theme와 OS 설치 폰트를 사용하며 최종 브랜드 디자인이 아닙니다.
+
+자세한 시점/Caption/transform/지원 경계와 재현 절차는 [Scene Render 계약](docs/SCENE_RENDER_CONTRACT.md)을 확인하세요.

@@ -1,5 +1,12 @@
 # DECISIONS
 
+## 2026-09-06 — Remotion Preview 렌더 인수
+
+- SCENE_RENDER_CONTRACT.md의 최소 Preview 계약을 인수한다. 별도 @short-auto/core/render로 React 의존 경계를 분리하고 원본 Core export는 유지한다.
+- ms→frame은 ceil 경계, frame→ms 조회는 floor 정책이다. 임의 ms의 오디오 trim은 최대 약 2프레임 차이 가능성을 유지 기록하며 샘플 정밀 편집 완료로 주장하지 않는다.
+- 가로/세로 합성 fixture 실제 MP4와 300개 테스트를 검증했다. draft/placeholder를 허용하는 Preview 경로이며 사용자 Final Render 승인 경로는 아직 없다.
+- 긴 Caption의 표시 분할, Scene overlap/내부 비디오, FREEZE_FOCUS/MATCH, 자유 layout 등은 남은 범위다. 다음 기능은 Source cue를 보존한 표시용 Caption 분할이다.
+
 ## 2026-09-06 — Theme/Motion 계산 인수 및 Phase 1 렌더 연결
 
 - THEME_MOTION_CONTRACT.md의 주입 Theme 선택/우선순위와 순수 시간 계산 계약을 인수한다. 기존 Scene override/원본을 주입 기본값보다 우선한다.
