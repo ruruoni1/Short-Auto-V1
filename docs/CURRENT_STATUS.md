@@ -25,7 +25,7 @@
 
 - 00_Master: ACTIVE — 전체 20개 명세 검토 완료, DECISIONS에 해석 차이 정리
 - 01_Core: COMPLETE — 공통 계약/런타임 검증 최초 기능 인수, Master 42 tests/typecheck/build/public import 통과
-- 02_Caption: IN_PROGRESS — SRT 파싱 인수 완료; 사용량 제한으로 중단된 표시용 분할 작업 재개 지시 완료
+- 02_Caption: PARTIAL — SRT 파싱 및 원문 보존 표시용 분할 인수; renderer 연결/픽셀 fit 후속
 - 03_Timeline: COMPLETE — 순수 ms Resolver/심화 검증 인수; Scene outputTiming·frame 변환은 후속
 - 04_Scene: PARTIAL — 9종 최소 React/Remotion Preview 및 가로/세로 실제 테스트 렌더 인수; 사용자 Final Render·자유 layout 후속
 - 05_Asset: PARTIAL — Registry/선택/Preview Placeholder 판정 인수; 파일 확인·생성·렌더 연동 후속
@@ -39,7 +39,7 @@
 
 ## 다음 실행
 
-가로/세로 합성 Preview 렌더 기반을 검증했다. 다음은 02_Caption의 Source 불변 표시용 분할 기능이다. 사용자 Final Render/승인·정밀 오디오 trim·FREEZE_FOCUS/MATCH는 별도 후속이며 Phase 1 전체 완료로 처리하지 않는다.
+표시용 Caption 분할 데이터가 검증됐다. 다음은 04_Scene에서 이 데이터를 Preview renderer에 연결하고 긴 자막 가로/세로 테스트 렌더를 확인한다. 사용자 Final Render/승인·정밀 오디오 trim·FREEZE_FOCUS/MATCH는 별도 후속이며 Phase 1 전체 완료로 처리하지 않는다.
 GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료된 개발 명세다.
 설계 COMPLETE는 개념 명세 작성 완료이며 구현 완료를 뜻하지 않는다.
 
@@ -84,6 +84,8 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - 실제 출력: dist/render/scene-preview-landscape.mp4(1280×720), scene-preview-portrait.mp4(720×1280), 각 390 frames/30fps/영상 13초. 합성 테스트음 사용이며 실제 내레이션/사용자 최종 영상은 아니다.
 
 ## 재개 기록 — 2026-09-07
+
+- Caption 표시용 분할 인수: Master typecheck, 전체 341/341 tests, build, 공개 API grapheme 원문 복원/시간 커버리지 확인 통과. 렌더/픽셀 fit 검증은 별도다.
 
 - 검증 완료된 renderer의 EOF 공백을 정리하고 기능 커밋 `c1f0bcb`를 main에 푸시했다. 동작 변경 없음.
 - 02_Caption 표시용 분할 작업은 사용량 제한으로 미착수 상태였다. 기존 작업에 재개 지시를 전달했다.

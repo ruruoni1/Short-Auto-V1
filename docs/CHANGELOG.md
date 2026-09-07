@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased - Caption 표시 분할 - 2026-09-07
+
+- 원본 cue/문자열/시간을 유지하는 grapheme 기반 표시 단위 생성 추가.
+- 원문 범위 및 줄바꿈을 보존하고 cue 내부 시간을 완전 분할하며 최소 시간 부족을 진단한다.
+- Master 검증: 전체 341개 테스트, 타입 검사, 빌드, 공개 API 복원/시간 검증 통과. 실제 renderer 연결은 후속.
+
 ## Unreleased - Remotion Preview - 2026-09-06
 
 - 별도 render 진입점, 9종 최소 Scene, 가로/세로 Composition 및 합성 자산 재현 스크립트 추가.

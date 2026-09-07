@@ -1,5 +1,11 @@
 # DECISIONS
 
+## 2026-09-07 — Caption 표시용 분할 인수
+
+- CAPTION_DISPLAY_CONTRACT.md를 인수한다. Intl.Segmenter grapheme 기준으로 원문과 UTF-16 참조를 보존하며 정책은 명시 입력한다.
+- 표시 시간은 원본 cue 내부 균등 정수 분배다. 최소 시간 부족 시 전체 계획 오류이며 Source를 늘리거나 발화 정렬로 주장하지 않는다.
+- 원문 표시 계획과 Override lines를 분리하며 React text 경로로 소비한다. 픽셀 fit과 renderer 연결은 후속 검증 대상이다.
+
 ## 2026-09-06 — Remotion Preview 렌더 인수
 
 - SCENE_RENDER_CONTRACT.md의 최소 Preview 계약을 인수한다. 별도 @short-auto/core/render로 React 의존 경계를 분리하고 원본 Core export는 유지한다.
