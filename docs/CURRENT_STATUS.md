@@ -1,6 +1,6 @@
 # CURRENT_STATUS
 
-작성일: 2026-09-06
+작성일: 2026-09-07
 문서 버전: v1.1
 
 ## 설계
@@ -25,7 +25,7 @@
 
 - 00_Master: ACTIVE — 전체 20개 명세 검토 완료, DECISIONS에 해석 차이 정리
 - 01_Core: COMPLETE — 공통 계약/런타임 검증 최초 기능 인수, Master 42 tests/typecheck/build/public import 통과
-- 02_Caption: PARTIAL — SRT 파싱/Caption 검증 인수 완료; 표시용 분할/렌더 정책 후속
+- 02_Caption: IN_PROGRESS — SRT 파싱 인수 완료; 사용량 제한으로 중단된 표시용 분할 작업 재개 지시 완료
 - 03_Timeline: COMPLETE — 순수 ms Resolver/심화 검증 인수; Scene outputTiming·frame 변환은 후속
 - 04_Scene: PARTIAL — 9종 최소 React/Remotion Preview 및 가로/세로 실제 테스트 렌더 인수; 사용자 Final Render·자유 layout 후속
 - 05_Asset: PARTIAL — Registry/선택/Preview Placeholder 판정 인수; 파일 확인·생성·렌더 연동 후속
@@ -82,3 +82,9 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - Theme/Motion 기능 로컬 커밋: `8f4a2eb`.
 - Render 연결 인수: Master typecheck, 전체 300/300 tests, build 통과. render:verify 재실행으로 두 MP4 전체 decode/오디오 stop-resume 검증 통과 및 가로/세로 contact sheet 직접 확인.
 - 실제 출력: dist/render/scene-preview-landscape.mp4(1280×720), scene-preview-portrait.mp4(720×1280), 각 390 frames/30fps/영상 13초. 합성 테스트음 사용이며 실제 내레이션/사용자 최종 영상은 아니다.
+
+## 재개 기록 — 2026-09-07
+
+- 검증 완료된 renderer의 EOF 공백을 정리하고 기능 커밋 `c1f0bcb`를 main에 푸시했다. 동작 변경 없음.
+- 02_Caption 표시용 분할 작업은 사용량 제한으로 미착수 상태였다. 기존 작업에 재개 지시를 전달했다.
+- 9월 7일 11:30 재개 예약 변경은 이전 중단 시 실행되지 않았다. 현재 19:42 KST에 즉시 재개했으며 날짜가 지난 기존 heartbeat는 PAUSED로 정리했다.
