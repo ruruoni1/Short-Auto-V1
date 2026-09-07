@@ -27,7 +27,7 @@
 - 01_Core: COMPLETE — 공통 계약/런타임 검증 최초 기능 인수, Master 42 tests/typecheck/build/public import 통과
 - 02_Caption: PARTIAL — SRT 파싱 및 원문 보존 표시용 분할 인수; renderer 연결/픽셀 fit 후속
 - 03_Timeline: COMPLETE — 순수 ms Resolver/심화 검증 인수; Scene outputTiming·frame 변환은 후속
-- 04_Scene: PARTIAL — 9종 최소 React/Remotion Preview 및 가로/세로 실제 테스트 렌더 인수; 사용자 Final Render·자유 layout 후속
+- 04_Scene: IN_PROGRESS — 최소 Preview 인수 완료; 긴 Caption 표시 분할 연결·별도 가로/세로 렌더 지시 전달 완료
 - 05_Asset: PARTIAL — Registry/선택/Preview Placeholder 판정 인수; 파일 확인·생성·렌더 연동 후속
 - 06_Theme_Motion: PARTIAL — Theme 선택/7 Motion·3 Transition 계산 인수; FREEZE_FOCUS/MATCH·시각 적용 후속
 - 07_AutoPlanner: BLOCKED
@@ -86,6 +86,7 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 ## 재개 기록 — 2026-09-07
 
 - Caption 표시용 분할 인수: Master typecheck, 전체 341/341 tests, build, 공개 API grapheme 원문 복원/시간 커버리지 확인 통과. 렌더/픽셀 fit 검증은 별도다.
+- Caption 표시 분할 기능 커밋 `7c2161a`를 main에 푸시했다.
 
 - 검증 완료된 renderer의 EOF 공백을 정리하고 기능 커밋 `c1f0bcb`를 main에 푸시했다. 동작 변경 없음.
 - 02_Caption 표시용 분할 작업은 사용량 제한으로 미착수 상태였다. 기존 작업에 재개 지시를 전달했다.
