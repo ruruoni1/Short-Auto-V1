@@ -1,6 +1,6 @@
 # CURRENT_STATUS
 
-작성일: 2026-09-07
+작성일: 2026-09-08
 문서 버전: v1.1
 
 ## 설계
@@ -38,6 +38,8 @@
 - 12_Integration: BLOCKED
 
 ## 다음 실행
+
+9월 8일 확인: 04_Scene의 긴 Caption 렌더 연결은 사용량 제한으로 변경 없이 중단됐다. 모델/추론 자동 배분 규칙을 적용해 기존 담당 작업에서 재개한다. 기준 HEAD는 58dd621이며 기존 341개 회귀 테스트와 13초 MP4를 보존한다.
 
 표시용 Caption 분할 데이터가 검증됐다. 다음은 04_Scene에서 이 데이터를 Preview renderer에 연결하고 긴 자막 가로/세로 테스트 렌더를 확인한다. 사용자 Final Render/승인·정밀 오디오 trim·FREEZE_FOCUS/MATCH는 별도 후속이며 Phase 1 전체 완료로 처리하지 않는다.
 GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료된 개발 명세다.

@@ -1,5 +1,9 @@
 # DECISIONS
 
+## 2026-09-08 — 작업별 모델·추론 자동 배분
+
+- 사용자가 각 담당 작업의 하위 에이전트 모델/추론 수준을 자율 배분하도록 승인했다. DEVELOPMENT_PLAN의 난도별 기본값을 적용하고 파일 소유/회귀 검증/기능별 커밋 규칙은 유지한다.
+
 ## 2026-09-07 — Caption 표시용 분할 인수
 
 - CAPTION_DISPLAY_CONTRACT.md를 인수한다. Intl.Segmenter grapheme 기준으로 원문과 UTF-16 참조를 보존하며 정책은 명시 입력한다.
