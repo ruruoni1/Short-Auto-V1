@@ -1,5 +1,9 @@
 # Short-Auto Core
 
+프로젝트 루트는 `D:\coding\Short-auto`입니다. [이관 v3](docs/NIHON_ZUPZUP_CODEX_MIGRATION_v3_2026-09-09.md)를 먼저 읽고 지정된 docs 루트 최신 문서만 구현 기준으로 사용합니다. `docs/archive`는 활성 기준에서 제외합니다.
+
+현재 순서는 기존 구현 마이그레이션 → Official Clip Library → Thumbnail Studio → VOICEVOX TTS입니다. [진행 기록](docs/MIGRATION_STATUS.md)에서 검증 상태를 관리합니다.
+
 Node.js/TypeScript 공통 데이터 계약 패키지 (`@short-auto/core`, 0.1.0).
 React/Remotion/Electron 후속 모듈이 같은 Schema와 타입을 가져다 사용합니다.
 순수 Core는 모델·검증·Caption·Timeline·Scene·Asset·Theme/Motion을 제공하며, 별도 React/Remotion 진입점에서 합성 fixture Preview/MP4 테스트 렌더를 실행할 수 있습니다. 전체 영상 제작 앱은 아직 구현 중입니다.
@@ -42,7 +46,7 @@ const result = validateWorkspace({
 `checkFinalRenderReadiness(workspace, projectId)`는 현재 revision 승인과 Asset 상태를 검사합니다.
 통과해도 실제 파일 존재/디코딩/렌더 성공을 보증하지 않습니다. Editor는 제작 데이터나 Override 수정 때 해당 revision을 반드시 증가시켜야 합니다.
 
-상세 계약과 후속 결정 사항은 [Core 계약](docs/CORE_CONTRACT.md)을 참고하세요.
+최신 구현 기준은 [문서 목록](docs/README.md)을 참고하세요.
 
 ## SRT 파싱·Caption 검증
 
@@ -61,7 +65,7 @@ console.log(result.diagnostics, result.duration);
 
 duration을 생략하면 마지막 cue 종료 시각만 추론하고 warning을 반환합니다. 실제 TTS 길이를 보증하지 않습니다.
 원문은 `originalSrt`, 원본 cue와 위치는 `cues`에 보존합니다. 오류가 있으면 `source`는 null이며 자동 재번호·시간 수정·분할을 하지 않습니다.
-지원 문법과 진단 코드는 [Caption 계약](docs/CAPTION_CONTRACT.md)을 참고하세요.
+현재 지원 문법과 진단은 src/caption.ts와 관련 테스트에 구현되어 있습니다.
 
 ## React/Remotion Scene Preview 테스트
 
@@ -81,4 +85,19 @@ Studio에서 `ScenePreviewLandscape`(1280×720), `ScenePreviewPortrait`(720×128
 
 합성 자료는 직접 만든 도형 영상·이미지·테스트음이며 실제 TTS 음성이나 사용자 미디어가 아닙니다. `remotion/public/` 생성물은 기존 파일을 덮어쓰지 않습니다. FREEZE_FOCUS/MATCH, 동시 Scene 레이아웃, Scene 내 비디오는 명시 오류로 남습니다. 임시 Theme와 OS 설치 폰트를 사용하며 최종 브랜드 디자인이 아닙니다.
 
-자세한 시점/Caption/transform/지원 경계와 재현 절차는 [Scene Render 계약](docs/SCENE_RENDER_CONTRACT.md)을 확인하세요.
+이 Preview는 기존 구현의 회귀 확인용입니다. 신규 제작 기능은 최신 문서의 Phase 순서를 따릅니다.
+
+## 긴 Caption 표시 단위 Preview
+
+긴 자막 fixture와 정책 전달 연결은 현재 미완성입니다. 아래 명령은 개발 중인 파일을 대상으로 하며 분할 자막 렌더 완료를 보증하지 않습니다.
+
+```sh
+npm run render:assets
+npm run caption:assets
+npm run caption:preview
+npm run caption:landscape
+npm run caption:portrait
+npm run caption:verify
+```
+
+가로/세로 MP4와 probe·대표 프레임은 `dist/render/caption-long*`에 생성됩니다. 기존 13초 Scene Preview MP4는 보존됩니다. 정책의 실제 화면 반영과 렌더 검증은 후속 작업으로 남아 있습니다.
