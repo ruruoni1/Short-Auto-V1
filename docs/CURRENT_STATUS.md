@@ -1,6 +1,6 @@
 # CURRENT_STATUS
 
-작성일: 2026-09-08
+작성일: 2026-09-09
 문서 버전: v1.1
 
 ## 설계
@@ -27,7 +27,7 @@
 - 01_Core: COMPLETE — 공통 계약/런타임 검증 최초 기능 인수, Master 42 tests/typecheck/build/public import 통과
 - 02_Caption: PARTIAL — SRT 파싱 및 원문 보존 표시용 분할 인수; renderer 연결/픽셀 fit 후속
 - 03_Timeline: COMPLETE — 순수 ms Resolver/심화 검증 인수; Scene outputTiming·frame 변환은 후속
-- 04_Scene: IN_PROGRESS — 최소 Preview 인수 완료; 긴 Caption 표시 분할 연결·별도 가로/세로 렌더 지시 전달 완료
+- 04_Scene: IN_PROGRESS — 04_Scene_v2 포크에서 gpt-5.6-sol/high로 긴 Caption 렌더 연결 재개
 - 05_Asset: PARTIAL — Registry/선택/Preview Placeholder 판정 인수; 파일 확인·생성·렌더 연동 후속
 - 06_Theme_Motion: PARTIAL — Theme 선택/7 Motion·3 Transition 계산 인수; FREEZE_FOCUS/MATCH·시각 적용 후속
 - 07_AutoPlanner: BLOCKED
@@ -60,7 +60,8 @@ GitHub 대상: `ruruoni1/Short-Auto-V1`. 최초 커밋 범위는 검토 완료�
 - 01_Core: `01a071cb-5d20-7313-94ee-e3a110009b95`
 - 02_Caption: `01a071cb-7e50-7b31-aefa-e8a4bff3db94`
 - 03_Timeline: `01a071cb-9786-79f2-9e13-a83cd16eb6df`
-- 04_Scene: `01a071cb-b22b-7332-a3ca-9873448b3aeb`
+- 04_Scene 원본(대기): `01a071cb-b22b-7332-a3ca-9873448b3aeb`
+- 04_Scene_v2 현재 담당: `01a081e1-4836-78c0-991e-e10f1acb48fa` — gpt-5.6-sol / high 지정 후 실행 확인
 - 05_Asset: `01a071cb-d82c-7c32-9b41-6adbcc003900`
 - 06_Theme_Motion: `01a071cb-fd89-7711-915e-a559c30877bf`
 - 공유 경로: `D:\coding\Short-auto`
