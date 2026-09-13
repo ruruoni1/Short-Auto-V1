@@ -10,7 +10,7 @@ React/Remotion/Electron 후속 모듈이 같은 Schema와 타입을 가져다 �
 
 ## 실행
 
-Node.js 22 이상과 npm이 필요합니다. 프로젝트 루트에서 실행합니다.
+Node.js 22.13 이상과 npm이 필요합니다. 프로젝트 루트에서 실행합니다. 현재 검증 환경은 Node.js 24.13입니다.
 
 ```sh
 npm ci
@@ -18,6 +18,17 @@ npm run typecheck
 npm test
 npm run build
 ```
+
+## 로컬 제작 관리 화면
+
+```powershell
+Set-Location D:\coding\Short-auto
+npm run app
+```
+
+브라우저에서 `http://127.0.0.1:4310`에 접속합니다. 공식 채널을 직접 등록하고 공식 여부를 확인한 뒤 동기화합니다. YouTube 동기화에는 서버 환경변수 `YOUTUBE_API_KEY`가 필요합니다. 키는 화면·DB·Git에 저장하지 않습니다. 다운로드에는 PATH의 yt-dlp(없으면 python -m yt_dlp)와 FFmpeg가 필요하며 사람이 채택한 클립만 실행됩니다.
+
+로컬 SQLite는 `data/sources.sqlite`, 소스 미디어는 `assets/media`에 저장되며 Git에서 제외됩니다. 수집한 메타데이터의 원본 URL과 검수 메모를 유지합니다. 현재 API 및 미디어 실연결 검증 여부는 [클립 검증 기록](docs/CLIP_LIBRARY_QA.md)을 확인하세요.
 
 ## 사용
 
@@ -101,3 +112,4 @@ npm run caption:verify
 ```
 
 가로/세로 MP4와 probe·대표 프레임은 `dist/render/caption-long*`에 생성됩니다. 기존 13초 Scene Preview MP4는 보존됩니다. 정책의 실제 화면 반영과 렌더 검증은 후속 작업으로 남아 있습니다.
+

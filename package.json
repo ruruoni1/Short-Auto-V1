@@ -25,10 +25,11 @@
     "preview": "remotion studio src/render/register.tsx --public-dir=remotion/public --no-open",
     "render:fixture": "remotion render src/render/register.tsx ScenePreviewLandscape dist/render/scene-preview-landscape.mp4 --public-dir=remotion/public --concurrency=2",
     "render:portrait": "remotion render src/render/register.tsx ScenePreviewPortrait dist/render/scene-preview-portrait.mp4 --public-dir=remotion/public --concurrency=2",
-    "render:verify": "tsx src/render/fixture/verify.ts"
+    "render:verify": "tsx src/render/fixture/verify.ts",
+    "app": "tsx src/app/start.ts"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.13"
   },
   "dependencies": {
     "@remotion/cli": "4.0.521",

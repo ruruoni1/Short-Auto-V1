@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta
+      name="description"
+      content="니혼줍줍 공식 YouTube 채널과 검수된 클립을 관리하는 로컬 작업 공간"
+    />
+    <title>니혼줍줍 클립 라이브러리</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">본문으로 바로가기</a>
+
+    <svg class="icon-sprite" aria-hidden="true">
+      <symbol id="icon-library" viewBox="0 0 24 24">
+        <path d="M4 5.5h16v13H4zM8 5.5v13M12 9.5h5M12 13h5" />
+      </symbol>
+      <symbol id="icon-channels" viewBox="0 0 24 24">
+        <rect x="3.5" y="5" width="17" height="14" rx="2" />
+        <path d="m10 9 5 3-5 3z" />
+      </symbol>
+      <symbol id="icon-studio" viewBox="0 0 24 24">
+        <path d="M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5M15.5 9h.01" />
+      </symbol>
+      <symbol id="icon-voice" viewBox="0 0 24 24">
+        <rect x="9" y="3" width="6" height="12" rx="3" />
+        <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6" />
+      </symbol>
+      <symbol id="icon-search" viewBox="0 0 24 24">
+        <circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" />
+      </symbol>
+      <symbol id="icon-plus" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14" />
+      </symbol>
+      <symbol id="icon-refresh" viewBox="0 0 24 24">
+        <path d="M20 7v5h-5M4 17v-5h5M18.5 9A7 7 0 0 0 6 7M5.5 15A7 7 0 0 0 18 17" />
+      </symbol>
+      <symbol id="icon-external" viewBox="0 0 24 24">
+        <path d="M14 5h5v5M19 5l-8 8M18 13v6H5V6h6" />
+      </symbol>
+      <symbol id="icon-chevron" viewBox="0 0 24 24">
+        <path d="m9 6 6 6-6 6" />
+      </symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24">
+        <path d="m6 6 12 12M18 6 6 18" />
+      </symbol>
+      <symbol id="icon-download" viewBox="0 0 24 24">
+        <path d="M12 4v11M7.5 11 12 15.5 16.5 11M5 20h14" />
+      </symbol>
+      <symbol id="icon-check" viewBox="0 0 24 24">
+        <path d="m5 12 4 4L19 6" />
+      </symbol>
+    </svg>
+
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="주요 메뉴">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">N</span>
+          <span><strong>니혼줍줍</strong><small>Source desk</small></span>
+        </div>
+
+        <nav class="primary-nav" aria-label="작업 공간">
+          <button class="nav-item is-active" type="button" data-view="library" aria-current="page">
+            <svg aria-hidden="true"><use href="#icon-library"></use></svg>
+            <span>클립 라이브러리</span>
+          </button>
+          <button class="nav-item" type="button" data-view="channels">
+            <svg aria-hidden="true"><use href="#icon-channels"></use></svg>
+            <span>공식 채널</span>
+          </button>
+        </nav>
+
+        <div class="nav-section" aria-label="준비 중인 기능">
+          <p>다음 단계</p>
+          <div class="nav-item is-disabled" aria-disabled="true">
+            <svg aria-hidden="true"><use href="#icon-studio"></use></svg>
+            <span>썸네일 스튜디오</span><small>준비 중</small>
+          </div>
+          <div class="nav-item is-disabled" aria-disabled="true">
+            <svg aria-hidden="true"><use href="#icon-voice"></use></svg>
+            <span>VOICEVOX TTS</span><small>준비 중</small>
+          </div>
+        </div>
+
+        <div class="connection-card">
+          <span class="status-dot" id="health-dot" aria-hidden="true"></span>
+          <span><strong id="health-title">연결 확인 중</strong><small id="health-copy">YouTube API 설정을 확인합니다.</small></span>
+        </div>
+      </aside>
+
+      <main id="main-content" class="main-content" tabindex="-1">
+        <section id="library-view" class="view" aria-labelledby="library-title">
+          <header class="page-header">
+            <div>
+              <p class="eyebrow">OFFICIAL SOURCE LIBRARY</p>
+              <h1 id="library-title">검수할 클립을 찾으세요</h1>
+              <p>공식 채널의 메타데이터를 확인하고, 필요한 소스만 사람이 선택합니다.</p>
+            </div>
+            <button id="refresh-clips" class="button button-secondary" type="button">
+              <svg aria-hidden="true"><use href="#icon-refresh"></use></svg>
+              새로고침
+            </button>
+          </header>
+
+          <form id="clip-filters" class="filter-panel" role="search" aria-label="클립 검색 및 필터">
+            <label class="search-field">
+              <span class="sr-only">제목, 설명, 대사 검색</span>
+              <svg aria-hidden="true"><use href="#icon-search"></use></svg>
+              <input id="clip-search" name="q" type="search" placeholder="제목, 설명, 대사로 검색" autocomplete="off" />
+            </label>
+            <label><span>공식 채널</span><select id="filter-channel" name="channelId"><option value="">전체 채널</option></select></label>
+            <label><span>콘텐츠</span><select name="contentType"><option value="">전체</option><option value="anime">애니</option><option value="drama">일드</option></select></label>
+            <label><span>클립 유형</span><select name="clipType"><option value="">전체</option><option value="scene">본편 장면</option><option value="highlight">하이라이트</option><option value="short">Shorts</option><option value="cutout">키리누키</option><option value="digest">다이제스트</option><option value="preview">선행 공개</option><option value="pv">PV·예고</option><option value="other">기타</option></select></label>
+            <label><span>검수 상태</span><select name="status"><option value="">전체</option><option value="NEW">신규</option><option value="ANALYZED">분석됨</option><option value="REVIEWED">검수됨</option><option value="CANDIDATE">후보</option><option value="SELECTED">선택됨</option><option value="DOWNLOADED">다운로드됨</option><option value="REJECTED">제외됨</option></select></label>
+            <label><span>작품명</span><input name="workTitle" type="text" placeholder="작품명 입력" autocomplete="off" /></label>
+            <button class="button button-primary filter-submit" type="submit">필터 적용</button>
+          </form>
+
+          <div id="library-alert" class="inline-alert" role="alert" aria-live="assertive" hidden></div>
+
+          <div class="section-heading">
+            <div><h2>수집된 클립</h2><p id="clip-count" aria-live="polite">불러오는 중</p></div>
+          </div>
+          <div id="clip-list" class="clip-list" aria-live="polite" aria-busy="true"></div>
+        </section>
+
+        <section id="channels-view" class="view" aria-labelledby="channels-title" hidden>
+          <header class="page-header">
+            <div>
+              <p class="eyebrow">VERIFIED CHANNELS</p>
+              <h1 id="channels-title">공식 채널을 관리하세요</h1>
+              <p>직접 공식 여부를 확인한 채널만 등록하고 증분 동기화합니다.</p>
+            </div>
+            <button id="open-channel-form" class="button button-primary" type="button">
+              <svg aria-hidden="true"><use href="#icon-plus"></use></svg>
+              채널 추가
+            </button>
+          </header>
+
+          <div id="channel-alert" class="inline-alert" role="alert" aria-live="assertive" hidden></div>
+          <div id="channel-list" class="channel-list" aria-live="polite" aria-busy="true"></div>
+        </section>
+      </main>
+    </div>
+
+    <div id="detail-backdrop" class="drawer-backdrop" hidden></div>
+    <aside id="clip-detail" class="detail-drawer" aria-labelledby="detail-title" aria-hidden="true" tabindex="-1">
+      <header class="drawer-header">
+        <div><p class="eyebrow">HUMAN REVIEW</p><h2 id="detail-title">클립 검수</h2></div>
+        <button id="close-detail" class="icon-button" type="button" aria-label="클립 검수 닫기"><svg aria-hidden="true"><use href="#icon-close"></use></svg></button>
+      </header>
+      <div id="detail-content" class="drawer-content"></div>
+    </aside>
+
+    <dialog id="channel-dialog" aria-labelledby="channel-dialog-title">
+      <form id="channel-form" method="dialog" novalidate>
+        <header class="dialog-header">
+          <div><p class="eyebrow">SOURCE CHANNEL</p><h2 id="channel-dialog-title">공식 채널 추가</h2></div>
+          <button class="icon-button" type="button" data-close-dialog aria-label="채널 창 닫기"><svg aria-hidden="true"><use href="#icon-close"></use></svg></button>
+        </header>
+        <input name="id" type="hidden" />
+        <input name="revision" type="hidden" />
+        <div class="form-grid">
+          <label class="field field-wide"><span>YouTube 채널 ID</span><input name="youtubeChannelId" required autocomplete="off" placeholder="확인한 채널 ID" /><small>채널 URL이 아니라 YouTube 채널 ID를 입력하세요.</small></label>
+          <label class="field field-wide"><span>채널명</span><input name="channelName" required autocomplete="off" placeholder="공식 채널명" /></label>
+          <label class="field"><span>분류</span><select name="category" required><option value="anime">애니</option><option value="drama">일드</option></select></label>
+          <label class="field"><span>소스 우선순위</span><select name="sourcePriority" required><option value="S">S · 최우선</option><option value="A">A · 우선</option><option value="B">B · 보조</option></select></label>
+          <label class="field field-wide"><span>운영 메모</span><textarea name="notes" rows="3" placeholder="확인 근거 또는 운영 메모"></textarea></label>
+          <label class="check-row field-wide"><input name="enabled" type="checkbox" checked /><span><strong>수집 활성화</strong><small>동기화 대상 채널로 사용합니다.</small></span></label>
+          <label class="check-row field-wide check-confirm"><input name="officialVerified" type="checkbox" required /><span><strong>이 채널이 권리자가 운영하는 공식 채널임을 직접 확인했습니다.</strong><small>채널의 인증 표시, 공식 사이트 링크, 권리자 정보를 확인한 뒤 체크하세요.</small></span></label>
+        </div>
+        <div id="channel-form-error" class="form-error" role="alert" aria-live="assertive" hidden></div>
+        <footer class="dialog-actions"><button class="button button-ghost" type="button" data-close-dialog>취소</button><button id="save-channel" class="button button-primary" type="submit">채널 저장</button></footer>
+      </form>
+    </dialog>
+
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  </body>
+</html>
