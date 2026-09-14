@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import {
   closeSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   openSync,
   readFileSync,
@@ -15,6 +16,7 @@ import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import type { ZodType } from 'zod';
 import {
   CreateThumbnailProjectInputSchema,
+  CreateThumbnailVariantInputSchema,
   FontRegistryEntrySchema,
   RevisionInputSchema,
   SourceFrameReferenceSchema,
@@ -248,7 +250,9 @@ export class ThumbnailRepository {
     const templateDefinition = THUMBNAIL_TEMPLATES.find(item => item.id === parsed.templateId);
     if (!templateDefinition) throw new ThumbnailRepositoryError('TEMPLATE_NOT_FOUND', '템플릿을 찾을 수 없습니다.', 404);
     const template = this.#materializeTemplate(templateDefinition);
-    if (parsed.variantOfProjectId !== null) this.#readProject(parsed.variantOfProjectId);
+    if (parsed.variantOfProjectId !== null) {
+      throw new ThumbnailRepositoryError('VARIANT_ENDPOINT_REQUIRED', 'A/B 변형은 원본 프로젝트의 variant API로 생성하세요.');
+    }
     const id = randomUUID();
     const timestamp = new Date().toISOString();
     const project = parseInput(ThumbnailProjectSchema, {
@@ -275,6 +279,59 @@ export class ThumbnailRepository {
     try { this.#writeProject(project); }
     catch (error) { rmSync(directory, { recursive: true, force: true }); throw error; }
     return clone(project);
+  }
+
+  /** Creates an independent A/B copy without changing the source project. */
+  createVariant(projectId: string, input: unknown): ThumbnailProject {
+    this.#assertId(projectId);
+    const parsed = parseInput(CreateThumbnailVariantInputSchema, input);
+    return this.#withLock(projectId, () => {
+      const source = this.#readProject(projectId);
+      const baseBytes = source.baseImage ? this.#readVerifiedBaseImage(source) : null;
+      const id = randomUUID();
+      const timestamp = new Date(Math.max(
+        Date.now(),
+        Date.parse(source.createdAt) + 1,
+        Date.parse(source.updatedAt) + 1,
+      )).toISOString();
+      const directory = this.#projectDirectory(id);
+      const baseFileName = source.baseImage === null ? null
+        : `base-${source.baseImage.sha256.slice(0, 16)}-${id.slice(0, 8)}.${source.baseImage.mimeType === 'image/png' ? 'png' : 'jpg'}`;
+      const baseImage = source.baseImage === null ? null : {
+        ...clone(source.baseImage),
+        fileName: baseFileName!,
+        path: this.#relativePath(join(directory, 'assets', baseFileName!)),
+      };
+      const variant = parseInput(ThumbnailProjectSchema, {
+        ...clone(source),
+        id,
+        name: parsed.name ?? source.name,
+        channelProfile: parsed.channelProfile ?? source.channelProfile,
+        baseImage,
+        exports: [],
+        variantOfProjectId: source.id,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        revision: 0,
+      });
+      this.#assertLayerFonts(variant.layers);
+      let createdDirectory = false;
+      try {
+        mkdirSync(directory);
+        createdDirectory = true;
+        mkdirSync(join(directory, 'assets'));
+        mkdirSync(join(directory, 'exports'));
+        if (baseBytes && variant.baseImage) {
+          this.#writeBinary(join(directory, 'assets', variant.baseImage.fileName), baseBytes);
+        }
+        this.#writeProject(variant);
+        return clone(variant);
+      } catch (error) {
+        if (createdDirectory) rmSync(directory, { recursive: true, force: true });
+        if (error instanceof ThumbnailRepositoryError) throw error;
+        throw new ThumbnailRepositoryError('STORAGE_UNAVAILABLE', '프로젝트 저장소를 사용할 수 없습니다.', 500);
+      }
+    });
   }
 
   /** Atomically creates a project with an independently persisted, verified official frame copy. */
@@ -520,6 +577,36 @@ export class ThumbnailRepository {
       renameSync(temporary, destination);
     } finally {
       if (existsSync(temporary)) unlinkSync(temporary);
+    }
+  }
+
+  #readVerifiedBaseImage(project: ThumbnailProject): Buffer {
+    const image = project.baseImage;
+    if (!image) throw new ThumbnailRepositoryError('ASSET_NOT_FOUND', '베이스 이미지를 찾을 수 없습니다.', 404);
+    const file = join(this.#projectDirectory(project.id), 'assets', image.fileName);
+    if (!existsSync(file)) throw new ThumbnailRepositoryError('ASSET_NOT_FOUND', '베이스 이미지를 찾을 수 없습니다.', 404);
+    let bytes: Buffer;
+    try {
+      const entry = lstatSync(file);
+      if (!entry.isFile() || entry.isSymbolicLink()) throw new Error('Base image is not a regular file');
+      bytes = readFileSync(file);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        throw new ThumbnailRepositoryError('ASSET_NOT_FOUND', '베이스 이미지를 찾을 수 없습니다.', 404);
+      }
+      throw new ThumbnailRepositoryError('ASSET_CORRUPT', '저장된 베이스 이미지가 올바르지 않습니다.', 500);
+    }
+    try {
+      const inspected = inspectImage(bytes);
+      const expectedFileName = new RegExp(`^base-${inspected.sha256.slice(0, 16)}(?:-[0-9a-f]{8})?\\.${inspected.info.extension}$`);
+      if (!expectedFileName.test(image.fileName) || image.mimeType !== inspected.info.mimeType
+        || image.width !== inspected.info.width || image.height !== inspected.info.height
+        || image.byteLength !== inspected.bytes.length || image.sha256 !== inspected.sha256) {
+        throw new Error('Base image metadata mismatch');
+      }
+      return inspected.bytes;
+    } catch {
+      throw new ThumbnailRepositoryError('ASSET_CORRUPT', '저장된 베이스 이미지가 기록과 일치하지 않습니다.', 500);
     }
   }
 

@@ -74,6 +74,11 @@ export async function routeThumbnails(repo: ThumbnailRepository, req: IncomingMe
     if (method === 'GET') { json(res,200,{data:repo.listProjects()}); return true; }
     if (method === 'POST') { json(res,201,{data:repo.createProject(await body(req))}); return true; }
   }
+  const variant = path.match(/^\/api\/thumbnail-projects\/([^/]+)\/variants$/);
+  if (variant && method === 'POST') {
+    json(res, 201, { data: repo.createVariant(variant[1]!, await body(req)) });
+    return true;
+  }
   const match = path.match(/^\/api\/thumbnail-projects\/([^/]+)(?:\/(assets|exports)(?:\/([^/]+))?)?$/);
   if (!match) return false;
   const id = match[1]!;

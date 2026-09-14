@@ -92,3 +92,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 프로젝트는 원본 SourceFrame을 이동하거나 삭제하지 않고 독립된 베이스 이미지 복사본과 `project.json`을 원자적으로 저장한다. 누락·변조·경로 주입은 구조화 오류로 거부한다.
 - 검증: `npx tsx --test tests/source-frame-thumbnail.test.ts tests/thumbnail-http.test.ts` 9/9, `npm run typecheck`, `npm run build`, `npm test` 408/408, `git diff --check` 통과.
 - 실제 영상/FFmpeg 실행은 하지 않고 합성 PNG와 기존 JPEG fixture로 검증했다. 다음 단위는 이 endpoint를 사용하는 Thumbnail Studio UI와 ContentPlan/A-B variant 연계다.
+
+## 2026-09-14 Phase E A/B ThumbnailProject variant 완료
+
+- `01_Core_v2`: `POST /api/thumbnail-projects/:projectId/variants`를 추가했다. 원본 레이어·캔버스·안전영역·베이스 출처를 보존하면서 새 UUID와 `variantOfProjectId`를 만들고, 베이스 이미지가 있으면 독립 파일로 복사한다.
+- variant는 revision 0과 빈 exports로 시작하며 원본을 변경하지 않는다. 누락·변조·경로 주입은 새 디렉터리를 남기지 않고 거부한다. 이름과 channel profile override는 strict schema를 따른다.
+- 검증: `npx tsx --test tests/thumbnail-variant.test.ts tests/thumbnail-http.test.ts` 11/11, `npm run typecheck`, `npm run build`, `npm test` 412/412, `git diff --check` 통과.
+- 다음 단위는 Thumbnail Studio UI에서 SourceFrame 프로젝트 생성과 A/B variant endpoint를 사용하는 흐름이다. ContentPlan 모델은 아직 구현하지 않았다.

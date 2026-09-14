@@ -203,6 +203,11 @@ export const CreateThumbnailProjectInputSchema = z.strictObject({
   variantOfProjectId: id.nullable().optional().default(null),
 });
 
+export const CreateThumbnailVariantInputSchema = z.strictObject({
+  name: z.string().min(1).max(80).optional(),
+  channelProfile: id.optional(),
+});
+
 export const UpdateThumbnailProjectInputSchema = z.strictObject({
   expectedRevision: z.number().int().nonnegative(),
   name: z.string().min(1).max(80).optional(),
@@ -237,6 +242,7 @@ export type ThumbnailProject = z.infer<typeof ThumbnailProjectSchema>;
 export type ThumbnailTemplate = z.infer<typeof ThumbnailTemplateSchema>;
 export type FontRegistryEntry = z.infer<typeof FontRegistryEntrySchema>;
 export type CreateThumbnailProjectInput = z.input<typeof CreateThumbnailProjectInputSchema>;
+export type CreateThumbnailVariantInput = z.input<typeof CreateThumbnailVariantInputSchema>;
 export type UpdateThumbnailProjectInput = z.input<typeof UpdateThumbnailProjectInputSchema>;
 export type UploadBaseImageInput = z.input<typeof UploadBaseImageInputSchema>;
 export type StoreThumbnailExportInput = z.input<typeof StoreThumbnailExportInputSchema>;
