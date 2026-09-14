@@ -78,3 +78,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 엔진이 꺼진 상태에서도 클립 라이브러리를 막지 않고 안내와 재시도만 표시하는 것을 로컬 앱에서 확인했다. 선택·입력은 오류 뒤 보존하도록 구현했다.
 - 검증: `node --check src/app/web/app.js`, `npm run typecheck`, `npm run build`, `npm test` 395/395, `git diff --check` 통과. 브라우저에서 `http://127.0.0.1:4310`의 unavailable 상태와 VOICEVOX 패널을 확인했다.
 - 실제 VOICEVOX 엔진의 동적 목록·청취·음질·실제 WAV 생성은 아직 미검증이다. 이 확인은 사용자 PC에서 엔진을 실행한 뒤 별도 수행한다. 다음 단위는 Phase E 소스 프레임·콘텐츠·썸네일 A/B 연계다.
+
+## 2026-09-14 Phase E SourceClip → SourceFrame 백엔드 완료
+
+- `01_Core_v2`: 선택된/다운로드된 SourceClip의 project-relative 영상에서 timestamp 프레임을 추출하고, SourceFrame SQLite 저장소와 조회 API를 연결했다. FFprobe/FFmpeg는 `shell:false` runner로 호출하며, PNG/JPEG 구조·dimensions·SHA-256·심볼릭 링크·경로 탈출·원본 identity를 검증한다.
+- API: `POST /api/source-clips/:clipId/frames`, `GET /api/source-frames?clipId=...`, `GET /api/source-frames/:id`, `GET /api/source-frames/:id/image`. 같은 clip/timestamp 요청은 기존 프레임을 재사용하고 실패 시 임시 파일·DB row를 남기지 않는다.
+- 검증: `npx tsx --test tests/source-frame.test.ts` 11/11, `npm run typecheck`, `npm run build`, `npm test` 406/406, `git diff --check` 통과.
+- 실제 FFmpeg 바이너리와 사용자 영상은 실행하지 않고 fake runner로 성공·실패 경계를 검증했다. 다음 단위는 SourceFrame → ThumbnailProject 연결이며, 실제 추출은 FFmpeg가 설치된 사용자 환경에서 별도 확인한다.
