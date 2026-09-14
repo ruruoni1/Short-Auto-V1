@@ -99,3 +99,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - variant는 revision 0과 빈 exports로 시작하며 원본을 변경하지 않는다. 누락·변조·경로 주입은 새 디렉터리를 남기지 않고 거부한다. 이름과 channel profile override는 strict schema를 따른다.
 - 검증: `npx tsx --test tests/thumbnail-variant.test.ts tests/thumbnail-http.test.ts` 11/11, `npm run typecheck`, `npm run build`, `npm test` 412/412, `git diff --check` 통과.
 - 다음 단위는 Thumbnail Studio UI에서 SourceFrame 프로젝트 생성과 A/B variant endpoint를 사용하는 흐름이다. ContentPlan 모델은 아직 구현하지 않았다.
+
+## 2026-09-15 Thumbnail Studio SourceFrame/A-B UI 연결 완료
+
+- `08_ReviewEditor_v2`: Thumbnail Studio에 A/B 변형 이름 입력과 변형 생성, SourceFrame ID 입력과 프로젝트 생성 흐름을 연결했다. 성공 응답만 새 프로젝트로 열고 variant lineage와 원본 보존 상태를 표시한다.
+- 요청 중복 클릭은 기존 operation 잠금으로 차단하며, 늦은 응답이 다른 편집 상태를 덮어쓰지 않도록 요청 전 project snapshot을 확인한다. SourceFrame 오류는 입력을 유지한 채 aria-live 오류 영역에 표시한다.
+- 검증: `node --check src/app/web/studio.js`, `npm run typecheck`, `npm run build`, `npm test` 412/412, `git diff --check` 통과. 로컬 `/studio`에서 SourceFrame 누락 오류와 새 UI 컨트롤을 확인했다.
+- 실제 SourceFrame/FFmpeg 실행과 성공 생성은 아직 사용자 미디어가 없어 미검증이다. 다음 작업은 ContentPlan 연결 여부를 설계한 뒤 필요한 경우 구현하는 것이다.

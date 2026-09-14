@@ -8,11 +8,12 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 const els = {
-  projectName: $('#project-name'), saveState: $('#save-state'), save: $('#save-project'),
+  projectName: $('#project-name'), saveState: $('#save-state'), projectLineage: $('#project-lineage'), save: $('#save-project'),
   exportButtons: $$('[data-export]'), projectList: $('#project-list'), templateList: $('#template-list'),
   dialogTemplateList: $('#dialog-template-list'), newProject: $('#new-project'), emptyNewProject: $('#empty-new-project'),
   dialog: $('#new-project-dialog'), newProjectForm: $('#new-project-form'), newProjectName: $('#new-project-name'),
   createProject: $('#create-project'), dialogError: $('#dialog-error'), baseUpload: $('#base-upload'),
+  variantName: $('#variant-name'), createVariant: $('#create-variant'), sourceFrameId: $('#source-frame-id'), createFromSource: $('#create-from-source'), projectFlowHelp: $('#project-flow-help'),
   baseSourceType: $('#base-source-type'), uploadDrop: $('#upload-drop'), canvas: $('#editor-canvas'),
   canvasWrap: $('#canvas-wrap'), canvasViewport: $('#canvas-viewport'), studioEmpty: $('#studio-empty'),
   canvasPreset: $('#canvas-preset'), canvasSize: $('#canvas-size'), workspaceError: $('#workspace-error'),
@@ -242,7 +243,7 @@ function renderProjects() {
     open.type = 'button';
     open.disabled = Boolean(state.operation);
     open.className = 'project-open';
-    open.innerHTML = `<span class="project-thumb ${project.canvas?.height > project.canvas?.width ? 'portrait' : ''}" aria-hidden="true"></span><span><strong>${escapeHtml(project.name)}</strong><small>${escapeHtml(project.canvas?.width || 0)} × ${escapeHtml(project.canvas?.height || 0)} · r${escapeHtml(project.revision ?? 0)}</small></span>`;
+    open.innerHTML = `<span class="project-thumb ${project.canvas?.height > project.canvas?.width ? 'portrait' : ''}" aria-hidden="true"></span><span><strong>${escapeHtml(project.name)}</strong><small>${escapeHtml(project.canvas?.width || 0)} × ${escapeHtml(project.canvas?.height || 0)} · r${escapeHtml(project.revision ?? 0)}</small>${project.variantOfProjectId ? `<small class="project-variant-label">A/B · 원본 보존</small>` : ''}</span>`;
     open.addEventListener('click', () => loadProject(project.id));
     const remove = document.createElement('button');
     remove.type = 'button';
@@ -319,6 +320,8 @@ function refreshControls() {
   els.projectName.disabled = !hasProject || busy;
   els.newProject.disabled = busy;
   els.emptyNewProject.disabled = busy;
+  els.createVariant.disabled = !hasProject || busy;
+  els.createFromSource.disabled = busy;
   els.save.disabled = !hasProject || !state.dirty || busy;
   els.exportButtons.forEach((button) => { button.disabled = !exportable; });
   [els.addText, els.baseUpload, els.baseSourceType, els.zoomOut, els.zoomIn, els.fit, els.toggleSafe].forEach((element) => { element.disabled = !hasProject || busy; });
@@ -332,6 +335,7 @@ function renderAll() {
   const project = state.project;
   els.projectName.disabled = !project;
   els.projectName.value = project?.name || '프로젝트를 선택하세요';
+  els.projectLineage.textContent = project?.variantOfProjectId ? `A/B 변형 · 원본 ${project.variantOfProjectId} 보존됨` : project ? '원본 프로젝트' : '';
   els.canvasWrap.hidden = !project;
   els.studioEmpty.hidden = Boolean(project);
   els.canvasPreset.textContent = project ? (templateForProject()?.name || project.templateId) : '캔버스 없음';
@@ -385,6 +389,64 @@ async function createProject(event) {
   } finally {
     state.operation = null;
     setBusy(els.createProject, false);
+    renderProjects();
+  }
+}
+
+function currentProjectSnapshot() {
+  return state.project ? { id: state.project.id, revision: state.project.revision, name: state.project.name } : null;
+}
+
+function snapshotStillCurrent(snapshot) {
+  return Boolean(snapshot && state.project && state.project.id === snapshot.id && state.project.revision === snapshot.revision && state.project.name === snapshot.name);
+}
+
+async function createVariant() {
+  if (!state.project || state.operation) return;
+  const snapshot = currentProjectSnapshot();
+  const name = els.variantName.value.trim();
+  state.operation = 'variant';
+  setBusy(els.createVariant, true, '복제 중…');
+  showError(els.leftError, '');
+  try {
+    const variant = normalizeProject(await api(projectUrl(snapshot.id, '/variants'), {
+      method: 'POST', body: JSON.stringify(name ? { name } : {}),
+    }));
+    if (!snapshotStillCurrent(snapshot)) throw new Error('현재 편집 중인 프로젝트가 바뀌어 변형을 열지 않았습니다.');
+    state.projects = [variant, ...state.projects.filter((project) => project.id !== variant.id)];
+    await setProject(variant);
+    els.variantName.value = '';
+    toast(`A/B 변형을 열었습니다. 원본 ${snapshot.id}는 유지됩니다.`);
+  } catch (error) {
+    showError(els.leftError, errorMessage(error));
+  } finally {
+    state.operation = null;
+    setBusy(els.createVariant, false);
+    renderProjects();
+  }
+}
+
+async function createFromSourceFrame() {
+  if (state.operation) return;
+  const sourceFrameId = els.sourceFrameId.value.trim();
+  if (!sourceFrameId) { showError(els.leftError, 'SourceFrame ID를 입력하세요.'); els.sourceFrameId.focus(); return; }
+  const snapshot = currentProjectSnapshot();
+  state.operation = 'source-frame';
+  setBusy(els.createFromSource, true, '가져오는 중…');
+  showError(els.leftError, '');
+  try {
+    const project = normalizeProject(await api(`${API.projects}/from-source-frame`, {
+      method: 'POST', body: JSON.stringify({ sourceFrameId }),
+    }));
+    if (snapshot && !snapshotStillCurrent(snapshot)) throw new Error('현재 편집 중인 프로젝트가 바뀌어 새 프로젝트를 열지 않았습니다.');
+    state.projects = [project, ...state.projects.filter((item) => item.id !== project.id)];
+    await setProject(project);
+    toast(`소스 프레임으로 새 프로젝트를 열었습니다: ${project.name}`);
+  } catch (error) {
+    showError(els.leftError, errorMessage(error));
+  } finally {
+    state.operation = null;
+    setBusy(els.createFromSource, false);
     renderProjects();
   }
 }
@@ -924,6 +986,8 @@ function bindEvents() {
     $$('.source-panel').forEach((panel) => { panel.hidden = panel.id !== `panel-${tab.dataset.panel}`; });
   }));
   [els.newProject, els.emptyNewProject].forEach((button) => button.addEventListener('click', () => openNewProject()));
+  els.createVariant.addEventListener('click', createVariant);
+  els.createFromSource.addEventListener('click', createFromSourceFrame);
   $$('[data-close-new]').forEach((button) => button.addEventListener('click', () => els.dialog.close()));
   els.newProjectForm.addEventListener('submit', createProject);
   els.save.addEventListener('click', () => saveProject().catch(() => {}));
