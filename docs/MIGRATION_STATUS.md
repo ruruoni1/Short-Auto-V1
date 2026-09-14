@@ -36,7 +36,7 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 | --- | --- | --- | --- |
 | 01_Core | 01_Core_v2 (`01a09ac0-0148-7b41-a51c-79cd9d9cf446`) | gpt-5.6-sol / high | ThumbnailRepository·모델·저장소 테스트 |
 | 08_ReviewEditor | 08_ReviewEditor_v2 (`01a09ac0-0a86-7ca0-a096-741010f80b6b`) | gpt-5.6-luna / medium | Thumbnail Studio 화면·Canvas 편집기 |
-| 12_Integration | 12_Integration_v2 (`01a09ac0-13ea-7333-94c3-ad4c36ab536c`) | gpt-6-astra / high | 서버/API·폰트 번들·통합 테스트 |
+| 12_Integration | 12_Integration_v2 (`01a09ac0-13ea-7333-94c3-ad4c36ab536c`) | gpt-5.6-sol / medium | 서버/API·폰트 번들·VOICEVOX 통합 테스트 |
 
 9월 13일 최초 실행은 사용량 한도로 실패했다. 9월 14일 02:20 예약 실행에서 사용 가능 상태를 확인하고 같은 포크에 재개 지시했다. 일회 예약 short-auto-9-14-2-20은 실행 후 PAUSED 처리했다. 이후 Phase C API·폰트·UI 포크를 재개했고 브라우저 QA까지 완료했다. 담당 결과를 통합 검증한 뒤 기능별 커밋·푸시한다. 기존 Caption 렌더 변경은 보존한다.
 
@@ -64,3 +64,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `CaptionLongLandscape`와 `CaptionLongPortrait`를 각각 30fps, 585 video frames, 19.5초로 렌더했다. 두 MP4 full decode와 대표 프레임 검증이 통과했다.
 - 검증: `npm run typecheck`, `npm run build`, `npm test` 388/388, `npm run caption:verify` 통과.
 - 기존 13초 Scene Preview MP4는 보존했다. 픽셀 fit은 grapheme 수 기반 정책이며 실제 fixture 표본 범위에서 검증한다.
+
+## 2026-09-14 Phase D VOICEVOX 백엔드 계약 완료
+
+- `12_Integration_v2`: localhost 전용 endpoint, health 3상태, 동적 speaker/style 목록, 명시적 `speaker_uuid`·`style_id` 프로필, `audio_query`·`synthesis`, 문장별 WAV와 재현 manifest, 구조화 오류와 원자적 프로필 저장을 구현했다.
+- 검증: `npx tsx --test tests/voicevox.test.ts` 7/7, `npm run typecheck`, `npm run build`, `npm test` 395/395, `git diff --check` 통과.
+- 실제 VOICEVOX 엔진은 호출하지 않고 fetch 모킹으로 계약을 검증했다. 외부 endpoint 차단, 동적 identity 보존, 파라미터 검증, 경로 탈출 차단, 실패 시 script/profile/output 상태 보존을 확인했다.
+- 남은 작업은 Phase D UI 연결(상태·새로고침·선택·미리듣기·프로필·문장 생성)과 사용자 PC의 실제 VOICEVOX 청취/WAV 검증이다. 이번 기능의 커밋 전까지 예약 `short-auto-9-15-00-20`은 사용량 제한 재개용으로 활성 유지한다.

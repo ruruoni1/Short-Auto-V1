@@ -15,6 +15,7 @@ export interface ServerOptions {
   youtube: YouTubeClient | null;
   download?: typeof downloadSelectedClip;
   thumbnailRoute?: AppRoute;
+  voicevoxRoute?: AppRoute;
 }
 
 const QuerySchema = z.object({
@@ -75,6 +76,7 @@ export function createAppServer(options: ServerOptions) {
         json(res, 200, { data: { youtubeConfigured: options.youtube !== null } }); return;
       }
       if (options.thumbnailRoute && await options.thumbnailRoute(req, res, path, method, body, json)) return;
+      if (options.voicevoxRoute && await options.voicevoxRoute(req, res, path, method, body, json)) return;
       if (path === '/api/channels') {
         if (method === 'GET') { json(res, 200, { data: repo.listChannels() }); return; }
         if (method === 'POST') { json(res, 201, { data: repo.createChannel(await body(req)) }); return; }

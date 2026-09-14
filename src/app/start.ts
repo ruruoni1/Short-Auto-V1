@@ -8,6 +8,10 @@ import { createAppServer } from './server.js';
 import { ThumbnailRepository } from './thumbnails/repository.js';
 import { routeThumbnails } from './thumbnail-routes.js';
 import { FontRegistry } from './fonts/registry.js';
+import { VoicevoxClient } from './voicevox/client.js';
+import { VoicevoxRepository } from './voicevox/repository.js';
+import { VoicevoxService } from './voicevox/service.js';
+import { createVoicevoxRoute } from './voicevox/routes.js';
 
 loadActiveDocuments();
 mkdirSync(APP_PATHS.data, { recursive: true });
@@ -15,9 +19,14 @@ const repository = new SourceRepository(join(APP_PATHS.data, 'sources.sqlite'));
 const youtube = process.env.YOUTUBE_API_KEY ? new YouTubeClient(process.env.YOUTUBE_API_KEY) : null;
 const fonts = new FontRegistry(APP_PATHS.projectRoot);
 const thumbnails = new ThumbnailRepository(APP_PATHS.projectRoot, fonts.listFonts());
+const voicevox = new VoicevoxService(
+  new VoicevoxClient(process.env.VOICEVOX_ENDPOINT ? { endpoint: process.env.VOICEVOX_ENDPOINT } : {}),
+  new VoicevoxRepository(APP_PATHS.projectRoot),
+);
 const server = createAppServer({ repository, root: APP_PATHS.projectRoot, youtube,
   thumbnailRoute: (req, res, path, method, body, json) =>
     routeThumbnails(thumbnails, req, res, path, method, body, json, fonts),
+  voicevoxRoute: createVoicevoxRoute(voicevox),
 });
 const port = Number(process.env.SHORT_AUTO_PORT ?? 4310);
 if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid SHORT_AUTO_PORT');

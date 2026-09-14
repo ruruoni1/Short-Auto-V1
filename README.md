@@ -2,7 +2,7 @@
 
 프로젝트 루트는 `D:\coding\Short-auto`입니다. [이관 v3](docs/NIHON_ZUPZUP_CODEX_MIGRATION_v3_2026-09-09.md)를 먼저 읽고 지정된 docs 루트 최신 문서만 구현 기준으로 사용합니다. `docs/archive`는 활성 기준에서 제외합니다.
 
-현재 순서는 기존 구현 마이그레이션 → Official Clip Library → Thumbnail Studio → VOICEVOX TTS입니다. [진행 기록](docs/MIGRATION_STATUS.md)에서 검증 상태를 관리합니다.
+현재 순서는 기존 구현 마이그레이션 → Official Clip Library → Thumbnail Studio → VOICEVOX TTS입니다. [진행 기록](docs/MIGRATION_STATUS.md)에서 검증 상태를 관리합니다. VOICEVOX 백엔드 계약은 완료되었고 UI 연결은 진행 중입니다.
 
 Node.js/TypeScript 공통 데이터 계약 패키지 (`@short-auto/core`, 0.1.0).
 React/Remotion/Electron 후속 모듈이 같은 Schema와 타입을 가져다 사용합니다.
@@ -112,4 +112,15 @@ npm run caption:verify
 ```
 
 가로/세로 MP4와 probe·대표 프레임은 `dist/render/caption-long*`에 생성됩니다. 기존 13초 Scene Preview MP4는 보존됩니다. `npm run caption:verify`는 두 MP4의 full decode와 정책 표시 표본을 검증합니다.
+
+## VOICEVOX TTS 백엔드 계약
+
+VOICEVOX는 기본적으로 `http://127.0.0.1:50021`만 사용합니다. 앱은 `/version` health와 `/speakers` 동적 목록을 확인하고, 사용자가 선택한 `speaker_uuid`와 `style_id`를 프로필로 저장합니다. 문장 생성은 `audio_query` → `synthesis` 순서로 실행하며 `output/tts/{contentId}` 아래에 문장별 WAV와 순서를 재현하는 manifest를 기록합니다.
+
+```powershell
+$env:VOICEVOX_ENDPOINT = "http://127.0.0.1:50021"
+npm run app
+```
+
+실제 엔진이 실행되지 않아도 `npx tsx --test tests/voicevox.test.ts`로 endpoint 제한, 동적 화자 identity, 오류 보존, WAV/manifest 계약을 모킹 검증할 수 있습니다. 실제 VOICEVOX 청취와 최종 음질 확인은 UI 연결 후 별도로 수행합니다.
 
