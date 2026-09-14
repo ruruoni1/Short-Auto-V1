@@ -100,7 +100,7 @@ Studio에서 `ScenePreviewLandscape`(1280×720), `ScenePreviewPortrait`(720×128
 
 ## 긴 Caption 표시 단위 Preview
 
-긴 자막 fixture와 정책 전달 연결은 현재 미완성입니다. 아래 명령은 개발 중인 파일을 대상으로 하며 분할 자막 렌더 완료를 보증하지 않습니다.
+긴 자막 fixture와 정책 전달 연결은 Caption Preview에 반영되어 있습니다. 아래 명령으로 가로·세로 fixture를 생성하고 검증할 수 있습니다.
 
 ```sh
 npm run render:assets
@@ -111,5 +111,5 @@ npm run caption:portrait
 npm run caption:verify
 ```
 
-가로/세로 MP4와 probe·대표 프레임은 `dist/render/caption-long*`에 생성됩니다. 기존 13초 Scene Preview MP4는 보존됩니다. 정책의 실제 화면 반영과 렌더 검증은 후속 작업으로 남아 있습니다.
+가로/세로 MP4와 probe·대표 프레임은 `dist/render/caption-long*`에 생성됩니다. 기존 13초 Scene Preview MP4는 보존됩니다. `npm run caption:verify`는 두 MP4의 full decode와 정책 표시 표본을 검증합니다.
 

@@ -2,9 +2,9 @@ import { useMemo } from 'react';
 import { AbsoluteFill, Sequence, Img, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import { Audio, Video } from '@remotion/media';
 import type { CSSProperties } from 'react';
-import type { AssetSelection, ChannelPack, PlannedScene, TimelineInput } from '../index.js';
+import type { AssetSelection, CaptionDisplayPolicy, ChannelPack, PlannedScene, TimelineInput } from '../index.js';
 import { sampleTransition, selectTransition, selectThemeColor, selectThemeFont } from '../index.js';
-import { frameInterval, frameToMs, msToFrame, prepareScenePreview, previousTransitionScene } from './plan.js';
+import { frameInterval, frameToMs, msToFrame, prepareScenePreview, previousTransitionScene, selectCaptionDisplay } from './plan.js';
 import type { ScenePreviewPlan } from './plan.js';
 import { editorStyle } from './scenes/shared.js';
 import * as Scenes from './scenes/index.js';
@@ -32,11 +32,11 @@ function OperationMedia({ choice, trim, duration }: { choice: AssetSelection; tr
   if (['video','anime_clip','drama_clip'].includes(asset.type)) return <Video src={staticFile(asset.src!)} trimBefore={trim} durationInFrames={duration} style={{width:'100%',height:'100%'}} objectFit="contain" volume={0.7}/>;
   return <Img src={staticFile(asset.src!)} style={mediaStyle}/>;
 }
-export type ScenePreviewProps = { input: TimelineInput; pack: ChannelPack };
+export type ScenePreviewProps = { input: TimelineInput; pack: ChannelPack; captionDisplayPolicy?: CaptionDisplayPolicy };
 /** Test/preview consumer only. Does not call or bypass the final production approval gate. */
-export function ScenePreview({ input, pack }: ScenePreviewProps) {
+export function ScenePreview({ input, pack, captionDisplayPolicy }: ScenePreviewProps) {
   const frame = useCurrentFrame(); const { fps, width, height } = useVideoConfig();
-  const plan = useMemo(() => prepareScenePreview(input, pack), [input, pack]);
+  const plan = useMemo(() => prepareScenePreview(input, pack, captionDisplayPolicy), [input, pack, captionDisplayPolicy]);
   if (fps !== input.production.settings.fps || width !== input.production.settings.width || height !== input.production.settings.height) throw new Error('Composition settings must match Production');
   const time = frameToMs(frame, fps), state = plan.runtime.getState(time);
   const portrait = height > width, logicalWidth = portrait ? 360 : 640, logicalHeight = portrait ? 640 : 360;
@@ -44,7 +44,10 @@ export function ScenePreview({ input, pack }: ScenePreviewProps) {
   const previous = current ? previousTransitionScene(plan,current) : null;
   const elapsed = current && state.sourceTimeMs !== null ? state.sourceTimeMs-current.sourceStartMs : 250;
   const transition = current ? sampleTransition(selectTransition(current.scene.transition, plan.theme.theme), elapsed, 250) : null;
-  const caption = current?.captionVisible ? (current.caption.lines ?? [state.caption!.text]).join('\n') : state.unassignedCaptionVisible ? state.caption!.text : null;
+  const selectedCaption = plan.captionDisplayUnits === null ? null : selectCaptionDisplay(state, plan.captionDisplayUnits);
+  const legacyCaption = plan.captionDisplayUnits === null
+    ? current?.captionVisible ? (current.caption.lines ?? [state.caption!.text]).join('\n') : state.unassignedCaptionVisible ? state.caption!.text : null
+    : null;
   const captionTransform = current?.caption ?? state.unassignedCaption;
   return <AbsoluteFill style={{ background: selectThemeColor(plan.theme,'background') ?? '#101c2c', color: selectThemeColor(plan.theme,'foreground') ?? '#fff', overflow: 'hidden' }}>
     <div style={{ position:'absolute', width: logicalWidth, height: logicalHeight, scale: width/logicalWidth, transformOrigin:'top left', wordBreak:'keep-all', overflowWrap:'break-word', fontFamily: selectThemeFont(plan.theme,'fontPrimaryKR') }}>
@@ -62,7 +65,11 @@ export function ScenePreview({ input, pack }: ScenePreviewProps) {
         const trim = Object.hasOwn(input.overrides.inserts,original.id) ? input.overrides.inserts[original.id]!.trim : original.trim;
         return <Sequence key={index} {...range} layout="none"><div style={segment.type === 'overlay' ? { position:'absolute', zIndex:4, right:20, top:20, width:100, height:65, background:'#101c2c' } : { position:'absolute', inset:0, zIndex:2, padding:30, background:'#101c2c' }}><OperationMedia choice={choice} trim={Math.floor((trim?.startMs ?? 0)*fps/1000)} duration={range.durationInFrames}/></div></Sequence>;
       })}
-      {caption && <div data-caption style={{ position:'absolute', zIndex:5, bottom:portrait ? 55 : 30, left:30, right:30, display:'flex', justifyContent:'center' }}><div style={{ whiteSpace:'pre-wrap', textAlign:'center', fontFamily:selectThemeFont(plan.theme,'fontCaption'), fontSize:portrait ? 19 : 20, lineHeight:1.5, padding:'7px 12px', borderRadius:5, background:'#080f1ce8', opacity:current?.scene.captionMode === 'subtle' ? 0.72 : 1, ...editorStyle(captionTransform,width/logicalWidth) }}>{caption}</div></div>}
+      {(legacyCaption !== null || (selectedCaption !== null && selectedCaption.lines.length > 0)) && <div data-caption data-caption-origin={selectedCaption?.origin ?? 'legacy'} data-caption-source-id={selectedCaption?.origin === 'source' ? selectedCaption.unit.sourceCaptionId : undefined} style={{ position:'absolute', zIndex:5, bottom:portrait ? 55 : 30, left:30, right:30, display:'flex', justifyContent:'center' }}>
+        <div data-caption-overflow={selectedCaption ? 'visible' : undefined} style={{ whiteSpace:selectedCaption ? 'nowrap' : 'pre-wrap', textAlign:'center', fontFamily:selectThemeFont(plan.theme,'fontCaption'), fontSize:portrait ? 19 : 20, lineHeight:1.5, padding:'7px 12px', borderRadius:5, background:'#080f1ce8', opacity:current?.scene.captionMode === 'subtle' ? 0.72 : 1, ...editorStyle(captionTransform,width/logicalWidth) }}>
+          {selectedCaption ? selectedCaption.lines.map((line,index) => <div data-caption-line key={index}>{line}</div>) : legacyCaption}
+        </div>
+      </div>}
     </div>
   </AbsoluteFill>;
 }

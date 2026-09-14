@@ -26,6 +26,11 @@
     "render:fixture": "remotion render src/render/register.tsx ScenePreviewLandscape dist/render/scene-preview-landscape.mp4 --public-dir=remotion/public --concurrency=2",
     "render:portrait": "remotion render src/render/register.tsx ScenePreviewPortrait dist/render/scene-preview-portrait.mp4 --public-dir=remotion/public --concurrency=2",
     "render:verify": "tsx src/render/fixture/verify.ts",
+    "caption:assets": "tsx src/render/fixture/caption-generate.ts",
+    "caption:preview": "remotion studio src/render/caption-register.tsx --public-dir=remotion/public --no-open",
+    "caption:landscape": "remotion render src/render/caption-register.tsx CaptionLongLandscape dist/render/caption-long-landscape.mp4 --public-dir=remotion/public --concurrency=2",
+    "caption:portrait": "remotion render src/render/caption-register.tsx CaptionLongPortrait dist/render/caption-long-portrait.mp4 --public-dir=remotion/public --concurrency=2",
+    "caption:verify": "tsx src/render/fixture/caption-verify.ts",
     "app": "tsx src/app/start.ts"
   },
   "engines": {

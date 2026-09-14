@@ -56,3 +56,11 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 자동 검증: `npm run typecheck` 통과, `npm run build` 통과, `npm test` 380/380 통과, `node --check src/app/web/studio.js` 통과, `git diff --check` 통과.
 - QA 증거: `temp/thumbnail-ui-qa.md`, `temp/thumbnail-studio-desktop.png`, `temp/thumbnail-studio-mobile.png`. 해당 파일은 임시 증거이며 Git에는 넣지 않는다.
 - 남은 제한: 공식 클립 프레임 연결과 A/B·crop/brightness UI는 Phase E 또는 후속 범위다. 브라우저 다운로드 경로 자체는 자동화 환경에서 확인하지 않고 서버 export 메타데이터와 다운로드 트리거를 확인했다.
+
+## 2026-09-14 긴 Caption 렌더 연결 완료
+
+- 기존 cue-level 표시 경로를 보존하면서 선택적 `CaptionDisplayPolicy`를 `prepareScenePreview`와 `ScenePreview`에 연결했다.
+- Runtime `sourceTimeMs`와 원본 caption ID의 반개방 구간으로 표시 단위를 선택하고, `caption.lines` override·Insert/Pause 숨김·Source 재개 동작을 검증했다.
+- `CaptionLongLandscape`와 `CaptionLongPortrait`를 각각 30fps, 585 video frames, 19.5초로 렌더했다. 두 MP4 full decode와 대표 프레임 검증이 통과했다.
+- 검증: `npm run typecheck`, `npm run build`, `npm test` 388/388, `npm run caption:verify` 통과.
+- 기존 13초 Scene Preview MP4는 보존했다. 픽셀 fit은 grapheme 수 기반 정책이며 실제 fixture 표본 범위에서 검증한다.
