@@ -30,7 +30,7 @@ const voicevox = new VoicevoxService(
 );
 const server = createAppServer({ repository, root: APP_PATHS.projectRoot, youtube,
   thumbnailRoute: (req, res, path, method, body, json) =>
-    routeThumbnails(thumbnails, req, res, path, method, body, json, fonts),
+    routeThumbnails(thumbnails, req, res, path, method, body, json, fonts, sourceFrameService),
   voicevoxRoute: createVoicevoxRoute(voicevox),
   sourceFrameRoute: createSourceFrameRoute(sourceFrameService),
 });

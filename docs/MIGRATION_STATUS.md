@@ -85,3 +85,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - API: `POST /api/source-clips/:clipId/frames`, `GET /api/source-frames?clipId=...`, `GET /api/source-frames/:id`, `GET /api/source-frames/:id/image`. 같은 clip/timestamp 요청은 기존 프레임을 재사용하고 실패 시 임시 파일·DB row를 남기지 않는다.
 - 검증: `npx tsx --test tests/source-frame.test.ts` 11/11, `npm run typecheck`, `npm run build`, `npm test` 406/406, `git diff --check` 통과.
 - 실제 FFmpeg 바이너리와 사용자 영상은 실행하지 않고 fake runner로 성공·실패 경계를 검증했다. 다음 단위는 SourceFrame → ThumbnailProject 연결이며, 실제 추출은 FFmpeg가 설치된 사용자 환경에서 별도 확인한다.
+
+## 2026-09-14 Phase E SourceFrame → ThumbnailProject 연결 완료
+
+- `12_Integration_v2`: `POST /api/thumbnail-projects/from-source-frame`를 추가했다. 저장된 SourceFrame의 실제 이미지 bytes·MIME·dimensions·byteLength·SHA-256을 재검증하고, 출처·권리·YouTube identity를 OFFICIAL_CLIP_FRAME 프로젝트에 복사한다.
+- 프로젝트는 원본 SourceFrame을 이동하거나 삭제하지 않고 독립된 베이스 이미지 복사본과 `project.json`을 원자적으로 저장한다. 누락·변조·경로 주입은 구조화 오류로 거부한다.
+- 검증: `npx tsx --test tests/source-frame-thumbnail.test.ts tests/thumbnail-http.test.ts` 9/9, `npm run typecheck`, `npm run build`, `npm test` 408/408, `git diff --check` 통과.
+- 실제 영상/FFmpeg 실행은 하지 않고 합성 PNG와 기존 JPEG fixture로 검증했다. 다음 단위는 이 endpoint를 사용하는 Thumbnail Studio UI와 ContentPlan/A-B variant 연계다.

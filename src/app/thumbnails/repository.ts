@@ -17,6 +17,7 @@ import {
   CreateThumbnailProjectInputSchema,
   FontRegistryEntrySchema,
   RevisionInputSchema,
+  SourceFrameReferenceSchema,
   StoreThumbnailExportInputSchema,
   ThumbnailProjectSchema,
   ThumbnailTemplateSchema,
@@ -45,6 +46,16 @@ export class ThumbnailRepositoryError extends Error {
     this.code = code;
     this.status = status;
   }
+}
+
+export interface VerifiedSourceFrameInput {
+  reference: SourceFrameReference;
+  bytes: Uint8Array;
+  mimeType: 'image/png' | 'image/jpeg';
+  width: number;
+  height: number;
+  byteLength: number;
+  sha256: string;
 }
 
 function parseInput<T>(schema: ZodType<T>, input: unknown): T {
@@ -264,6 +275,73 @@ export class ThumbnailRepository {
     try { this.#writeProject(project); }
     catch (error) { rmSync(directory, { recursive: true, force: true }); throw error; }
     return clone(project);
+  }
+
+  /** Atomically creates a project with an independently persisted, verified official frame copy. */
+  createProjectFromSourceFrame(input: unknown, source: VerifiedSourceFrameInput): ThumbnailProject {
+    const parsed = parseInput(CreateThumbnailProjectInputSchema, input);
+    if (parsed.variantOfProjectId !== null) {
+      throw new ThumbnailRepositoryError('INVALID_INPUT', '소스 프레임 프로젝트 생성에는 variant 원본을 지정할 수 없습니다.');
+    }
+    const templateDefinition = THUMBNAIL_TEMPLATES.find(item => item.id === parsed.templateId);
+    if (!templateDefinition) throw new ThumbnailRepositoryError('TEMPLATE_NOT_FOUND', '템플릿을 찾을 수 없습니다.', 404);
+    const template = this.#materializeTemplate(templateDefinition);
+    const reference = parseInput(SourceFrameReferenceSchema, source.reference);
+    const inspected = inspectImage(source.bytes);
+    if (inspected.info.mimeType !== source.mimeType || inspected.info.width !== source.width
+      || inspected.info.height !== source.height || inspected.bytes.length !== source.byteLength
+      || inspected.sha256 !== source.sha256) {
+      throw new ThumbnailRepositoryError('SOURCE_FRAME_IMAGE_MISMATCH', '소스 프레임 이미지가 검증된 기록과 일치하지 않습니다.', 500);
+    }
+    const id = randomUUID();
+    const timestamp = new Date().toISOString();
+    const extension = inspected.info.extension;
+    const fileName = `base-${inspected.sha256.slice(0, 16)}.${extension}`;
+    const directory = this.#projectDirectory(id);
+    const destination = join(directory, 'assets', fileName);
+    const project = parseInput(ThumbnailProjectSchema, {
+      schemaVersion: 1,
+      id,
+      channelProfile: parsed.channelProfile,
+      templateId: template.id,
+      name: parsed.name,
+      canvas: template.canvas,
+      safeArea: template.safeArea,
+      safeAreaVisible: true,
+      baseImage: {
+        sourceType: 'OFFICIAL_CLIP_FRAME',
+        fileName,
+        path: this.#relativePath(destination),
+        mimeType: inspected.info.mimeType,
+        width: inspected.info.width,
+        height: inspected.info.height,
+        byteLength: inspected.bytes.length,
+        sha256: inspected.sha256,
+        transform: this.#defaultBaseTransform(template.canvas, inspected.info),
+        sourceFrame: reference,
+        createdAt: timestamp,
+      },
+      layers: template.defaultLayers,
+      exports: [],
+      variantOfProjectId: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      revision: 0,
+    });
+    let createdDirectory = false;
+    try {
+      mkdirSync(directory);
+      createdDirectory = true;
+      mkdirSync(join(directory, 'assets'));
+      mkdirSync(join(directory, 'exports'));
+      this.#writeBinary(destination, inspected.bytes);
+      this.#writeProject(project);
+      return clone(project);
+    } catch (error) {
+      if (createdDirectory) rmSync(directory, { recursive: true, force: true });
+      if (error instanceof ThumbnailRepositoryError) throw error;
+      throw new ThumbnailRepositoryError('STORAGE_UNAVAILABLE', '프로젝트 저장소를 사용할 수 없습니다.', 500);
+    }
   }
 
   updateProject(projectId: string, input: unknown): ThumbnailProject {
