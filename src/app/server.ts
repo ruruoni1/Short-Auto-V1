@@ -26,8 +26,12 @@ const QuerySchema = z.object({
   offset: z.coerce.number().int().min(0).optional(),
 }).strict();
 
+function hasJsonContentType(req: IncomingMessage): boolean {
+  return req.headers['content-type']?.split(';', 1)[0]?.trim().toLowerCase() === 'application/json';
+}
+
 async function body(req: IncomingMessage, limit = 1024 * 1024): Promise<unknown> {
-  if (!req.headers['content-type']?.startsWith('application/json')) {
+  if (!hasJsonContentType(req)) {
     throw Object.assign(new Error('JSON 요청이 필요합니다.'), { status: 415, code: 'JSON_REQUIRED' });
   }
   const chunks: Buffer[] = [];
@@ -64,7 +68,7 @@ export function createAppServer(options: ServerOptions) {
       const url = new URL(req.url ?? '/', `http://${host}`);
       const method = req.method ?? 'GET';
       const path = url.pathname;
-      if (['POST','PATCH','DELETE'].includes(method) && !req.headers['content-type']?.startsWith('application/json')) {
+      if (['POST','PATCH','DELETE'].includes(method) && !hasJsonContentType(req)) {
         json(res, 415, { error: { code: 'JSON_REQUIRED', message: 'JSON 요청이 필요합니다.' } }); return;
       }
       if (method === 'GET' && path === '/api/health') {
@@ -123,13 +127,14 @@ export function createAppServer(options: ServerOptions) {
       const job = path.match(/^\/api\/jobs\/([^/]+)$/);
       if (method === 'GET' && job) { json(res, 200, { data: repo.getJob(job[1]!) }); return; }
       const files: Record<string, [string, string]> = {
+        '/studio': ['studio.html', 'text/html'], '/studio.js': ['studio.js', 'text/javascript'], '/studio.css': ['studio.css', 'text/css'],
         '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/styles.css': ['styles.css', 'text/css'],
       };
       const file = files[path];
       if (method === 'GET' && file) {
         const content = await readFile(join(options.root, 'src', 'app', 'web', file[0]));
         res.writeHead(200, { 'Content-Type': `${file[1]}; charset=utf-8`, 'Cache-Control': 'no-cache',
-          'Content-Security-Policy': "default-src 'self'; img-src 'self' https: data:; style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'" });
+          'Content-Security-Policy': "default-src 'self'; img-src 'self' https: data: blob:; font-src 'self'; style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'" });
         res.end(content); return;
       }
       json(res, 404, { error: { code: 'NOT_FOUND', message: '요청한 항목이 없습니다.' } });

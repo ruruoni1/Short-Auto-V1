@@ -35,9 +35,24 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 | 원본 | 활성 포크 | 모델 / 추론 | 소유 범위 |
 | --- | --- | --- | --- |
 | 01_Core | 01_Core_v2 (`01a09ac0-0148-7b41-a51c-79cd9d9cf446`) | gpt-5.6-sol / high | ThumbnailRepository·모델·저장소 테스트 |
-| 08_ReviewEditor | 08_ReviewEditor_v2 (`01a09ac0-0a86-7ca0-a096-741010f80b6b`) | gpt-5.6-sol / high | Thumbnail Studio 화면·Canvas 편집기 |
+| 08_ReviewEditor | 08_ReviewEditor_v2 (`01a09ac0-0a86-7ca0-a096-741010f80b6b`) | gpt-5.6-luna / medium | Thumbnail Studio 화면·Canvas 편집기 |
 | 12_Integration | 12_Integration_v2 (`01a09ac0-13ea-7333-94c3-ad4c36ab536c`) | gpt-6-astra / high | 서버/API·폰트 번들·통합 테스트 |
 
-9월 13일 최초 실행은 사용량 한도로 실패했다. 9월 14일 02:20 예약 실행에서 사용 가능 상태를 확인하고 같은 포크에 재개 지시했다. 일회 예약 short-auto-9-14-2-20은 실행 후 PAUSED 처리했다. Phase C 중단 API 연결은 아직 모델 파일이 없어 미완성이므로 현재 트리를 빌드 완료 상태로 보지 않는다. 담당 결과를 통합 검증한 뒤 기능별 커밋·푸시한다. 기존 Caption 렌더 변경은 보존한다.
+9월 13일 최초 실행은 사용량 한도로 실패했다. 9월 14일 02:20 예약 실행에서 사용 가능 상태를 확인하고 같은 포크에 재개 지시했다. 일회 예약 short-auto-9-14-2-20은 실행 후 PAUSED 처리했다. 이후 Phase C API·폰트·UI 포크를 재개했고 브라우저 QA까지 완료했다. 담당 결과를 통합 검증한 뒤 기능별 커밋·푸시한다. 기존 Caption 렌더 변경은 보존한다.
 
-2026-09-14 Phase B 커밋 후보: 독립 Git index 스냅샷에서 TypeScript 검사 및 전체 359개 테스트 통과. 모바일 390×844 메뉴 검증 완료. C 구현과 기존 Caption 변경은 작업트리에 보존한다.
+2026-09-14 Phase B 검증 기록: 독립 Git index 스냅샷에서 TypeScript 검사 및 전체 359개 테스트를 통과했고, `dfe3828`로 커밋·푸시했다. 모바일 390×844 메뉴 검증도 완료했다. C 구현과 기존 Caption 변경은 별도 작업으로 보존했다.
+
+## 2026-09-14 오전 재개 및 일회 예약
+
+현재 조정 Master는 `00_Master (3)` (`01a09f6f-ef84-78d0-95ce-301aa743e6fd`)다. 최신 중단 지점은 Phase C Thumbnail Studio 통합 검증이었다. Phase B는 `dfe3828`로 커밋·푸시됐다. 기존 포크 `01_Core_v2`와 `08_ReviewEditor_v2`에는 작업별 모델·추론 수준을 명시하여 재개했고, `12_Integration_v2`도 API 검증을 완료했다. 원본 담당 작업은 대기하며 기존 Caption 변경은 보존한다.
+
+2026-09-14 14:00 Asia/Seoul에 이 Master에서 최신 중단 지점을 이어가는 일회 예약 `short-auto-9-14-2`를 설정했고 실행 후 PAUSED 처리했다. 실제 Git·상태 문서·담당 작업 상태를 먼저 확인하여 중복 배정을 막았다.
+
+## 2026-09-14 Phase C Thumbnail Studio 검증 완료
+
+- `01_Core_v2`: ThumbnailRepository·모델·저장소 테스트 완료. 4개 템플릿, revision 충돌, PNG/JPEG 구조 검증, 폰트 family/weight gate, 프로젝트 영속화를 확인했다.
+- `12_Integration_v2`: Thumbnail API, exact JSON media type, 동시 mutation 충돌, Noto Sans CJK KR 번들·해시·라이선스 self route를 확인했다.
+- `08_ReviewEditor_v2`: 실제 Chrome QA 완료. 4개 템플릿, 베이스 업로드, 한글·일본어 혼합 줄바꿈, 레이어 이동·리사이즈·잠금·숨김·삭제, 저장·복원, PNG/JPG export, 폰트 실패 차단, 390×844 모바일을 확인했다.
+- 자동 검증: `npm run typecheck` 통과, `npm run build` 통과, `npm test` 380/380 통과, `node --check src/app/web/studio.js` 통과, `git diff --check` 통과.
+- QA 증거: `temp/thumbnail-ui-qa.md`, `temp/thumbnail-studio-desktop.png`, `temp/thumbnail-studio-mobile.png`. 해당 파일은 임시 증거이며 Git에는 넣지 않는다.
+- 남은 제한: 공식 클립 프레임 연결과 A/B·crop/brightness UI는 Phase E 또는 후속 범위다. 브라우저 다운로드 경로 자체는 자동화 환경에서 확인하지 않고 서버 export 메타데이터와 다운로드 트리거를 확인했다.

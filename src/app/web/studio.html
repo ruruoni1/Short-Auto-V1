@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="description" content="니혼줍줍 레이어 기반 썸네일 편집기" />
+    <title>니혼줍줍 썸네일 스튜디오</title>
+    <link rel="stylesheet" href="/studio.css" />
+    <script type="module" src="/studio.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#studio-main">편집기로 바로가기</a>
+    <svg class="icon-sprite" aria-hidden="true">
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="m14 6-6 6 6 6" /></symbol>
+      <symbol id="i-project" viewBox="0 0 24 24"><path d="M4 6h6l2 2h8v10H4z" /></symbol>
+      <symbol id="i-layout" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 4v16M9 10h11" /></symbol>
+      <symbol id="i-image" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2" /><path d="m4 16 4-4 4 4 3-3 5 5M15.5 9h.01" /></symbol>
+      <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 6h14M12 6v13M8 19h8" /></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V5M8 9l4-4 4 4M5 19h14" /></symbol>
+      <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 8H4V3M4.5 8a8 8 0 1 1 1 10" /></symbol>
+      <symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 8h5V3M19.5 8a8 8 0 1 0-1 10" /></symbol>
+      <symbol id="i-fit" viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" /></symbol>
+      <symbol id="i-safe" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><rect x="7" y="7" width="10" height="10" rx="1" /></symbol>
+      <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 4h12l2 2v14H5zM8 4v6h8V4M8 20v-6h8v6" /></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14" /></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></symbol>
+      <symbol id="i-up" viewBox="0 0 24 24"><path d="m7 14 5-5 5 5" /></symbol>
+      <symbol id="i-down" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5" /></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M3 12s3.5-5 9-5 9 5 9 5-3.5 5-9 5-9-5-9-5z" /><circle cx="12" cy="12" r="2" /></symbol>
+    </svg>
+
+    <header class="topbar">
+      <a class="brand-link" href="/" aria-label="클립 라이브러리로 돌아가기">
+        <span class="brand-mark" aria-hidden="true">N</span>
+        <span><strong>Thumbnail Studio</strong><small>니혼줍줍</small></span>
+      </a>
+      <div class="document-title">
+        <label for="project-name">프로젝트 이름</label>
+        <input id="project-name" type="text" value="프로젝트를 선택하세요" disabled />
+        <span id="save-state" class="save-state" aria-live="polite">저장된 프로젝트 없음</span>
+      </div>
+      <div class="top-actions">
+        <button id="save-project" class="button button-secondary" type="button" disabled><svg aria-hidden="true"><use href="#i-save"></use></svg>저장</button>
+        <div class="export-group" role="group" aria-label="썸네일 내보내기">
+          <button class="button button-primary" type="button" data-export="png" disabled><svg aria-hidden="true"><use href="#i-download"></use></svg>PNG</button>
+          <button class="button button-primary export-jpg" type="button" data-export="jpg" disabled>JPG</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="studio-main" class="studio-shell" tabindex="-1">
+      <aside class="left-panel" aria-label="프로젝트와 소스">
+        <div class="panel-tabs" role="tablist" aria-label="편집 소스">
+          <button id="tab-projects" class="panel-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="panel-projects" data-panel="projects"><svg aria-hidden="true"><use href="#i-project"></use></svg>프로젝트</button>
+          <button id="tab-templates" class="panel-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-templates" data-panel="templates"><svg aria-hidden="true"><use href="#i-layout"></use></svg>템플릿</button>
+          <button id="tab-assets" class="panel-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-assets" data-panel="assets"><svg aria-hidden="true"><use href="#i-image"></use></svg>이미지</button>
+        </div>
+
+        <section id="panel-projects" class="source-panel" role="tabpanel" aria-labelledby="tab-projects">
+          <div class="panel-heading"><div><h2>프로젝트</h2><p>저장된 작업을 이어서 편집합니다.</p></div><button id="new-project" class="icon-button" type="button" aria-label="새 프로젝트"><svg aria-hidden="true"><use href="#i-plus"></use></svg></button></div>
+          <div id="project-list" class="project-list" aria-live="polite" aria-busy="true"></div>
+        </section>
+        <section id="panel-templates" class="source-panel" role="tabpanel" aria-labelledby="tab-templates" hidden>
+          <div class="panel-heading"><div><h2>템플릿</h2><p>구도와 타이포 계층만 적용합니다.</p></div></div>
+          <div id="template-list" class="template-list" aria-live="polite" aria-busy="true"></div>
+        </section>
+        <section id="panel-assets" class="source-panel" role="tabpanel" aria-labelledby="tab-assets" hidden>
+          <div class="panel-heading"><div><h2>베이스 이미지</h2><p>텍스트 없는 PNG 또는 JPEG만 사용합니다.</p></div></div>
+          <label id="upload-drop" class="upload-drop">
+            <svg aria-hidden="true"><use href="#i-upload"></use></svg>
+            <strong>이미지 선택</strong>
+            <span>PNG·JPEG, 최대 서버 허용 용량</span>
+            <input id="base-upload" type="file" accept="image/png,image/jpeg" disabled />
+          </label>
+          <label class="field"><span>이미지 출처 유형</span><select id="base-source-type" disabled><option value="USER_IMAGE">사용자 이미지</option><option value="RECREATED_IMAGE">자체 재현 이미지</option><option value="AI_GENERATED">무텍스트 AI 이미지</option></select></label>
+          <div class="phase-note"><strong>공식 클립 프레임</strong><p>SELECTED 클립 프레임 연결은 Phase E에서 지원합니다. 공식 영상은 자유 이용 소스가 아닙니다.</p></div>
+        </section>
+        <div id="left-error" class="inline-error" role="alert" aria-live="assertive" hidden></div>
+      </aside>
+
+      <section class="workspace" aria-label="썸네일 캔버스">
+        <div class="canvas-toolbar">
+          <div class="tool-group" role="group" aria-label="실행 취소와 다시 실행">
+            <button id="undo" class="tool-button" type="button" aria-label="실행 취소" disabled><svg aria-hidden="true"><use href="#i-undo"></use></svg></button>
+            <button id="redo" class="tool-button" type="button" aria-label="다시 실행" disabled><svg aria-hidden="true"><use href="#i-redo"></use></svg></button>
+          </div>
+          <div class="canvas-meta"><strong id="canvas-preset">캔버스 없음</strong><span id="canvas-size">프로젝트를 선택하세요</span></div>
+          <div class="tool-group" role="group" aria-label="화면 보기">
+            <button id="zoom-out" class="tool-button" type="button" aria-label="축소" disabled>−</button>
+            <output id="zoom-value" for="zoom-out zoom-in">100%</output>
+            <button id="zoom-in" class="tool-button" type="button" aria-label="확대" disabled>+</button>
+            <button id="fit-canvas" class="tool-button" type="button" aria-label="화면에 맞춤" disabled><svg aria-hidden="true"><use href="#i-fit"></use></svg></button>
+            <button id="toggle-safe" class="tool-button" type="button" aria-label="안전영역 표시" aria-pressed="true" disabled><svg aria-hidden="true"><use href="#i-safe"></use></svg></button>
+          </div>
+        </div>
+        <div id="canvas-viewport" class="canvas-viewport">
+          <div id="studio-empty" class="studio-empty">
+            <span class="empty-mark"><svg aria-hidden="true"><use href="#i-layout"></use></svg></span>
+            <h1>템플릿에서 시작하세요</h1>
+            <p>Long-form 또는 Shorts 템플릿을 고르면 실제 규격의 편집 캔버스가 열립니다.</p>
+            <button id="empty-new-project" class="button button-primary" type="button">새 프로젝트 만들기</button>
+          </div>
+          <div id="canvas-wrap" class="canvas-wrap" hidden>
+            <canvas id="editor-canvas" tabindex="0" aria-label="썸네일 편집 캔버스. 방향키로 선택한 레이어를 이동하고 Shift와 함께 누르면 10픽셀씩 이동합니다."></canvas>
+          </div>
+        </div>
+        <div id="workspace-error" class="workspace-alert" role="alert" aria-live="assertive" hidden></div>
+      </section>
+
+      <aside class="right-panel" aria-label="텍스트와 레이어 설정">
+        <div class="inspector-header"><div><p class="eyebrow">TEXT LAYERS</p><h2>레이어 편집</h2></div><button id="add-text" class="button button-primary button-compact" type="button" disabled><svg aria-hidden="true"><use href="#i-plus"></use></svg>텍스트</button></div>
+        <div id="font-warning" class="registry-warning" role="status">폰트 레지스트리를 확인하고 있습니다.</div>
+
+        <form id="text-inspector" class="inspector-form" hidden>
+          <label class="field field-wide"><span>텍스트</span><textarea id="layer-text" rows="3" maxlength="160"></textarea></label>
+          <div class="field-grid">
+            <label class="field"><span>폰트</span><select id="layer-font"></select></label>
+            <label class="field"><span>굵기</span><select id="layer-weight"><option value="400">Regular</option><option value="500">Medium</option><option value="600">Semi Bold</option><option value="700">Bold</option><option value="800">Extra Bold</option><option value="900">Black</option></select></label>
+            <label class="field"><span>크기</span><input id="layer-size" type="number" min="12" max="300" step="1" /></label>
+            <label class="field"><span>정렬</span><select id="layer-align"><option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option></select></label>
+            <label class="field color-field"><span>글자색</span><input id="layer-color" type="color" /></label>
+            <label class="field color-field"><span>외곽선</span><input id="layer-stroke-color" type="color" /></label>
+            <label class="field"><span>외곽선 두께</span><input id="layer-stroke-width" type="number" min="0" max="20" step="1" /></label>
+          </div>
+          <div class="inspector-actions">
+            <button id="layer-up" class="tool-button" type="button" aria-label="레이어 앞으로"><svg aria-hidden="true"><use href="#i-up"></use></svg></button>
+            <button id="layer-down" class="tool-button" type="button" aria-label="레이어 뒤로"><svg aria-hidden="true"><use href="#i-down"></use></svg></button>
+            <button id="layer-lock" class="tool-button" type="button" aria-label="레이어 잠금" aria-pressed="false"><svg aria-hidden="true"><use href="#i-lock"></use></svg></button>
+            <button id="layer-visible" class="tool-button" type="button" aria-label="레이어 표시" aria-pressed="true"><svg aria-hidden="true"><use href="#i-eye"></use></svg></button>
+            <button id="delete-layer" class="tool-button tool-danger" type="button" aria-label="텍스트 레이어 삭제"><svg aria-hidden="true"><use href="#i-trash"></use></svg></button>
+          </div>
+        </form>
+        <div id="inspector-empty" class="inspector-empty"><p>텍스트 레이어를 추가하거나 캔버스에서 선택하면 설정이 표시됩니다.</p></div>
+        <section class="layers-section" aria-labelledby="layers-title"><div class="layers-heading"><h3 id="layers-title">레이어</h3><span id="layer-count">0개</span></div><div id="layer-list" class="layer-list"></div></section>
+      </aside>
+    </main>
+
+    <dialog id="new-project-dialog" aria-labelledby="new-project-title">
+      <form id="new-project-form" method="dialog">
+        <header class="dialog-header"><div><p class="eyebrow">NEW PROJECT</p><h2 id="new-project-title">템플릿 선택</h2></div><button class="icon-button" type="button" data-close-new aria-label="새 프로젝트 창 닫기">×</button></header>
+        <label class="field dialog-name"><span>프로젝트 이름</span><input id="new-project-name" name="name" type="text" required maxlength="80" placeholder="콘텐츠를 구분할 이름" /></label>
+        <div id="dialog-template-list" class="dialog-template-list" role="radiogroup" aria-label="썸네일 템플릿"></div>
+        <div id="dialog-error" class="inline-error" role="alert" aria-live="assertive" hidden></div>
+        <footer class="dialog-actions"><button class="button button-secondary" type="button" data-close-new>취소</button><button id="create-project" class="button button-primary" type="submit">프로젝트 만들기</button></footer>
+      </form>
+    </dialog>
+
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  </body>
+</html>
