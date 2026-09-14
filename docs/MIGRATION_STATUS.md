@@ -70,4 +70,11 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `12_Integration_v2`: localhost 전용 endpoint, health 3상태, 동적 speaker/style 목록, 명시적 `speaker_uuid`·`style_id` 프로필, `audio_query`·`synthesis`, 문장별 WAV와 재현 manifest, 구조화 오류와 원자적 프로필 저장을 구현했다.
 - 검증: `npx tsx --test tests/voicevox.test.ts` 7/7, `npm run typecheck`, `npm run build`, `npm test` 395/395, `git diff --check` 통과.
 - 실제 VOICEVOX 엔진은 호출하지 않고 fetch 모킹으로 계약을 검증했다. 외부 endpoint 차단, 동적 identity 보존, 파라미터 검증, 경로 탈출 차단, 실패 시 script/profile/output 상태 보존을 확인했다.
-- 남은 작업은 Phase D UI 연결(상태·새로고침·선택·미리듣기·프로필·문장 생성)과 사용자 PC의 실제 VOICEVOX 청취/WAV 검증이다. 이번 기능의 커밋 전까지 예약 `short-auto-9-15-00-20`은 사용량 제한 재개용으로 활성 유지한다.
+- UI 연결 전까지 예약 `short-auto-9-15-00-20`은 사용량 제한 재개용으로 활성 유지한다.
+
+## 2026-09-14 Phase D VOICEVOX UI 연결 완료
+
+- `08_ReviewEditor_v2`: 기존 `준비 중` 메뉴를 실제 VOICEVOX 작업 공간으로 교체하고 health/unavailable/retry 상태, 동적 화자·스타일 선택, 프로필 저장, 파라미터 조절, WAV 미리듣기, 문장 생성 결과 표시를 연결했다.
+- 엔진이 꺼진 상태에서도 클립 라이브러리를 막지 않고 안내와 재시도만 표시하는 것을 로컬 앱에서 확인했다. 선택·입력은 오류 뒤 보존하도록 구현했다.
+- 검증: `node --check src/app/web/app.js`, `npm run typecheck`, `npm run build`, `npm test` 395/395, `git diff --check` 통과. 브라우저에서 `http://127.0.0.1:4310`의 unavailable 상태와 VOICEVOX 패널을 확인했다.
+- 실제 VOICEVOX 엔진의 동적 목록·청취·음질·실제 WAV 생성은 아직 미검증이다. 이 확인은 사용자 PC에서 엔진을 실행한 뒤 별도 수행한다. 다음 단위는 Phase E 소스 프레임·콘텐츠·썸네일 A/B 연계다.

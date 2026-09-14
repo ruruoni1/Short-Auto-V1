@@ -188,6 +188,24 @@ dialog .form-error { margin: 0 26px; }
 .toast-region { position: fixed; right: 20px; bottom: 20px; z-index: 10; display: grid; gap: 8px; pointer-events: none; }
 .toast { max-width: 380px; padding: 12px 14px; border: 1px solid #bdd8cc; border-radius: 10px; color: var(--accent-dark); background: #f1f8f4; box-shadow: 0 12px 30px rgba(31,44,37,.12); font-size: 12px; animation: toast-in 240ms var(--ease) both; }
 
+.voicevox-status { display: flex; align-items: flex-start; gap: 12px; margin: 24px 0 14px; padding: 15px 17px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.voicevox-status strong { display: block; font-size: 13px; }
+.voicevox-status p { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.voicevox-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 18px; }
+.voicevox-card { padding: 19px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(255,255,255,.78); }
+.voicevox-heading { margin: 0 0 18px; padding-bottom: 12px; }
+.voicevox-form-grid { gap: 13px; }
+.voicevox-parameters { display: grid; gap: 12px; margin-top: 18px; }
+.voicevox-parameters label { display: grid; grid-template-columns: 92px minmax(0,1fr); align-items: center; gap: 12px; color: var(--muted); font-size: 11px; }
+.voicevox-parameters output { color: var(--ink); font: 600 11px "Consolas", monospace; }
+.voicevox-parameters input { min-height: 24px; accent-color: var(--accent); }
+.voicevox-card-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.voicevox-help { color: var(--muted); font-size: 11px; }
+.voicevox-action-row { justify-content: flex-end; }
+.voicevox-content-id { margin-top: 14px; }
+.voicevox-audio { width: 100%; margin-top: 18px; }
+.voicevox-result { margin-top: 14px; padding: 11px 12px; border-radius: 8px; color: var(--accent-dark); background: var(--accent-soft); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+
 :focus-visible { outline: 3px solid rgba(38,113,91,.25); outline-offset: 2px; }
 @keyframes reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes shimmer { to { transform: translateX(100%); } }
@@ -210,6 +228,7 @@ dialog .form-error { margin: 0 26px; }
   .primary-nav::-webkit-scrollbar { display: none; }
   .nav-item { width: auto; min-width: max-content; flex: 0 0 auto; grid-template-columns: 20px auto; padding: 0 10px; white-space: nowrap; }
   .view { padding: 32px 18px 60px; }
+  .voicevox-grid { grid-template-columns: 1fr; }
   .page-header { align-items: flex-start; }
   .filter-panel { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .clip-item { grid-template-columns: 150px minmax(0,1fr); gap: 14px; }

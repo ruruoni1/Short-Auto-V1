@@ -5,6 +5,7 @@ const state = {
   activeView: 'library',
   channelJobs: new Map(),
   lastDetailTrigger: null,
+  voicevox: { voices: [], selectedSpeakerUuid: '', selectedStyleId: '', profile: null, audioUrl: null, busy: false },
 };
 
 const ui = {
@@ -12,6 +13,7 @@ const ui = {
   views: {
     library: document.querySelector('#library-view'),
     channels: document.querySelector('#channels-view'),
+    voicevox: document.querySelector('#voicevox-view'),
   },
   clipFilters: document.querySelector('#clip-filters'),
   filterChannel: document.querySelector('#filter-channel'),
@@ -27,6 +29,16 @@ const ui = {
   detailBackdrop: document.querySelector('#detail-backdrop'),
   detailContent: document.querySelector('#detail-content'),
   toastRegion: document.querySelector('#toast-region'),
+  voicevox: {
+    status: document.querySelector('#voicevox-status'), dot: document.querySelector('#voicevox-status-dot'),
+    statusTitle: document.querySelector('#voicevox-status-title'), statusCopy: document.querySelector('#voicevox-status-copy'),
+    alert: document.querySelector('#voicevox-alert'), retry: document.querySelector('#voicevox-retry'),
+    speaker: document.querySelector('#voicevox-speaker'), style: document.querySelector('#voicevox-style'),
+    profileName: document.querySelector('#voicevox-profile-name'), save: document.querySelector('#voicevox-save-profile'), profileStatus: document.querySelector('#voicevox-profile-status'),
+    text: document.querySelector('#voicevox-text'), contentId: document.querySelector('#voicevox-content-id'), preview: document.querySelector('#voicevox-preview'), generate: document.querySelector('#voicevox-generate'), audio: document.querySelector('#voicevox-audio'), result: document.querySelector('#voicevox-result'),
+    params: { speedScale: document.querySelector('#voicevox-speed'), pitchScale: document.querySelector('#voicevox-pitch'), intonationScale: document.querySelector('#voicevox-intonation'), volumeScale: document.querySelector('#voicevox-volume') },
+    values: { speedScale: document.querySelector('#voicevox-speed-value'), pitchScale: document.querySelector('#voicevox-pitch-value'), intonationScale: document.querySelector('#voicevox-intonation-value'), volumeScale: document.querySelector('#voicevox-volume-value') },
+  },
 };
 
 const labels = {
@@ -43,11 +55,12 @@ const labels = {
 };
 
 class ApiError extends Error {
-  constructor(message, code, status) {
+  constructor(message, code, status, details = null) {
     super(message);
     this.name = 'ApiError';
     this.code = code;
     this.status = status;
+    this.details = details;
   }
 }
 
@@ -75,6 +88,7 @@ async function request(path, options = {}) {
       payload?.error?.message || '요청을 처리하지 못했습니다.',
       payload?.error?.code || 'REQUEST_FAILED',
       response.status,
+      payload?.error || null,
     );
   }
   return payload;
@@ -797,8 +811,129 @@ async function pollJob(id, onUpdate) {
   }
 }
 
+function voicevoxParameters() {
+  return Object.fromEntries(Object.entries(ui.voicevox.params).map(([key, node]) => [key, Number(node.value)]));
+}
+
+function setVoicevoxStatus(kind, title, copy) {
+  ui.voicevox.dot.className = `status-dot ${kind === 'ready' ? 'is-good' : kind === 'loading' ? '' : 'is-bad'}`;
+  ui.voicevox.statusTitle.textContent = title;
+  ui.voicevox.statusCopy.textContent = copy;
+}
+
+function voicevoxSelectedVoice() {
+  return state.voicevox.voices.find((voice) => voice.speakerUuid === state.voicevox.selectedSpeakerUuid && String(voice.styleId) === String(state.voicevox.selectedStyleId));
+}
+
+function renderVoicevox() {
+  const speakers = [...new Map(state.voicevox.voices.map((voice) => [voice.speakerUuid, voice])).values()];
+  const currentSpeaker = state.voicevox.selectedSpeakerUuid;
+  ui.voicevox.speaker.replaceChildren(element('option', '', '화자를 선택하세요'));
+  ui.voicevox.speaker.firstChild.value = '';
+  speakers.forEach((voice) => { const option = element('option', '', voice.speakerName); option.value = voice.speakerUuid; ui.voicevox.speaker.append(option); });
+  ui.voicevox.speaker.value = currentSpeaker;
+  const styles = state.voicevox.voices.filter((voice) => voice.speakerUuid === currentSpeaker);
+  ui.voicevox.style.replaceChildren(element('option', '', currentSpeaker ? '스타일을 선택하세요' : '먼저 화자를 선택하세요'));
+  ui.voicevox.style.firstChild.value = '';
+  styles.forEach((voice) => { const option = element('option', '', voice.styleName); option.value = String(voice.styleId); ui.voicevox.style.append(option); });
+  ui.voicevox.style.value = String(state.voicevox.selectedStyleId || '');
+  const ready = state.voicevox.voices.length > 0;
+  ui.voicevox.speaker.disabled = !ready;
+  ui.voicevox.style.disabled = !ready || !currentSpeaker;
+  const selected = Boolean(voicevoxSelectedVoice());
+  ui.voicevox.save.disabled = !selected || !ui.voicevox.profileName.value.trim() || state.voicevox.busy;
+  ui.voicevox.preview.disabled = !selected || state.voicevox.busy;
+  ui.voicevox.generate.disabled = !selected || state.voicevox.busy;
+  Object.entries(ui.voicevox.params).forEach(([key, node]) => { ui.voicevox.values[key].textContent = Number(node.value).toFixed(2); });
+}
+
+async function loadVoicevox() {
+  state.voicevox.busy = true;
+  setVoicevoxStatus('loading', 'VOICEVOX 연결 확인 중', '로컬 엔진과 화자 목록을 불러오고 있습니다.');
+  setAlert(ui.voicevox.alert, '');
+  renderVoicevox();
+  try {
+    const health = await request('/api/voicevox/health');
+    if (health?.data?.status && health.data.status !== 'success') throw new ApiError('VOICEVOX 엔진을 사용할 수 없습니다.', 'ENGINE_UNAVAILABLE', 503, health.data);
+    const [speakerPayload, profilePayload] = await Promise.all([request('/api/voicevox/speakers'), request('/api/voicevox/profile')]);
+    state.voicevox.voices = Array.isArray(speakerPayload?.data?.voices) ? speakerPayload.data.voices : [];
+    state.voicevox.profile = profilePayload?.data || null;
+    state.voicevox.selectedSpeakerUuid = '';
+    state.voicevox.selectedStyleId = '';
+    if (state.voicevox.profile && state.voicevox.voices.some((voice) => voice.speakerUuid === state.voicevox.profile.speakerUuid && String(voice.styleId) === String(state.voicevox.profile.styleId))) {
+      state.voicevox.selectedSpeakerUuid = state.voicevox.profile.speakerUuid;
+      state.voicevox.selectedStyleId = state.voicevox.profile.styleId;
+      ui.voicevox.profileName.value = state.voicevox.profile.profileName || '';
+      Object.entries(state.voicevox.profile.parameters || {}).forEach(([key, value]) => { if (ui.voicevox.params[key]) ui.voicevox.params[key].value = value; });
+    } else if (state.voicevox.profile) {
+      ui.voicevox.profileStatus.textContent = '저장된 화자 또는 스타일이 없어 다시 선택하세요.';
+    }
+    setVoicevoxStatus('ready', 'VOICEVOX 준비됨', `${state.voicevox.voices.length}개 스타일을 불러왔습니다. 화자와 스타일을 직접 선택하세요.`);
+  } catch (error) {
+    state.voicevox.voices = [];
+    setVoicevoxStatus('unavailable', 'VOICEVOX를 사용할 수 없습니다', '엔진 상태를 확인한 뒤 다시 시도하세요. 클립 라이브러리는 계속 사용할 수 있습니다.');
+    setAlert(ui.voicevox.alert, errorMessage(error));
+  } finally {
+    state.voicevox.busy = false;
+    renderVoicevox();
+  }
+}
+
+async function voicevoxAudio(path, body) {
+  let response;
+  try { response = await fetch(path, { method: 'POST', headers: { Accept: 'audio/wav', 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
+  catch { throw new ApiError('로컬 서버에 연결할 수 없습니다.', 'NETWORK_ERROR', 0); }
+  if (!response.ok) { let payload = null; try { payload = await response.json(); } catch {} throw new ApiError(payload?.error?.message || '음성을 만들지 못했습니다.', payload?.error?.code || 'REQUEST_FAILED', response.status, payload?.error); }
+  return URL.createObjectURL(await response.blob());
+}
+
+function voicevoxSelectionRequired() {
+  if (!voicevoxSelectedVoice()) { setAlert(ui.voicevox.alert, '화자와 스타일을 먼저 선택하세요.'); return false; }
+  return true;
+}
+
+async function previewVoicevox() {
+  if (!voicevoxSelectionRequired()) return;
+  const text = ui.voicevox.text.value.trim();
+  if (!text) { setAlert(ui.voicevox.alert, '미리들을 문장을 입력하세요.'); ui.voicevox.text.focus(); return; }
+  state.voicevox.busy = true; renderVoicevox(); setAlert(ui.voicevox.alert, '');
+  try { const url = await voicevoxAudio('/api/voicevox/preview', { text, styleId: Number(state.voicevox.selectedStyleId), parameters: voicevoxParameters() }); if (state.voicevox.audioUrl) URL.revokeObjectURL(state.voicevox.audioUrl); state.voicevox.audioUrl = url; ui.voicevox.audio.src = url; ui.voicevox.audio.hidden = false; setAlert(ui.voicevox.alert, ''); ui.voicevox.result.hidden = false; ui.voicevox.result.textContent = '미리듣기 파일을 준비했습니다.'; }
+  catch (error) { setAlert(ui.voicevox.alert, errorMessage(error)); }
+  finally { state.voicevox.busy = false; renderVoicevox(); }
+}
+
+async function generateVoicevox() {
+  if (!voicevoxSelectionRequired()) return;
+  const lines = ui.voicevox.text.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const contentId = ui.voicevox.contentId.value.trim();
+  if (!lines.length) { setAlert(ui.voicevox.alert, '생성할 문장을 입력하세요.'); ui.voicevox.text.focus(); return; }
+  if (!contentId) { setAlert(ui.voicevox.alert, '콘텐츠 ID를 입력하세요.'); ui.voicevox.contentId.focus(); return; }
+  state.voicevox.busy = true; renderVoicevox(); setAlert(ui.voicevox.alert, '');
+  try { const payload = await request('/api/voicevox/generations', { method: 'POST', body: { contentId, sentences: lines.map((text, index) => ({ id: `sentence_${String(index + 1).padStart(3, '0')}`, text })) } }); const result = payload?.data; ui.voicevox.result.hidden = false; ui.voicevox.result.textContent = `${lines.length}개 문장을 생성했습니다. 매니페스트: ${result?.manifestPath || '저장 경로 확인 필요'}`; }
+  catch (error) { setAlert(ui.voicevox.alert, errorMessage(error)); }
+  finally { state.voicevox.busy = false; renderVoicevox(); }
+}
+
+async function saveVoicevoxProfile() {
+  if (!voicevoxSelectionRequired()) return;
+  const profileName = ui.voicevox.profileName.value.trim();
+  if (!profileName) { setAlert(ui.voicevox.alert, '프로필 이름을 입력하세요.'); ui.voicevox.profileName.focus(); return; }
+  state.voicevox.busy = true; renderVoicevox(); setAlert(ui.voicevox.alert, '');
+  try { const payload = await request('/api/voicevox/profile', { method: 'PUT', body: { profileName, speakerUuid: state.voicevox.selectedSpeakerUuid, styleId: Number(state.voicevox.selectedStyleId), parameters: voicevoxParameters() } }); state.voicevox.profile = payload?.data || null; ui.voicevox.profileStatus.textContent = '보이스 프로필을 저장했습니다.'; showToast('VOICEVOX 보이스 프로필을 저장했습니다.'); }
+  catch (error) { setAlert(ui.voicevox.alert, errorMessage(error)); }
+  finally { state.voicevox.busy = false; renderVoicevox(); }
+}
+
 function bindEvents() {
   ui.navButtons.forEach((button) => button.addEventListener('click', () => setView(button.dataset.view)));
+  ui.voicevox.retry.addEventListener('click', loadVoicevox);
+  ui.voicevox.speaker.addEventListener('change', () => { state.voicevox.selectedSpeakerUuid = ui.voicevox.speaker.value; state.voicevox.selectedStyleId = ''; renderVoicevox(); });
+  ui.voicevox.style.addEventListener('change', () => { state.voicevox.selectedStyleId = ui.voicevox.style.value; renderVoicevox(); });
+  ui.voicevox.profileName.addEventListener('input', renderVoicevox);
+  Object.entries(ui.voicevox.params).forEach(([key, node]) => node.addEventListener('input', () => { ui.voicevox.values[key].textContent = Number(node.value).toFixed(2); }));
+  ui.voicevox.save.addEventListener('click', saveVoicevoxProfile);
+  ui.voicevox.preview.addEventListener('click', previewVoicevox);
+  ui.voicevox.generate.addEventListener('click', generateVoicevox);
   ui.clipFilters.addEventListener('submit', (event) => { event.preventDefault(); loadClips(); });
   document.querySelector('#refresh-clips').addEventListener('click', () => loadClips());
   document.querySelector('#open-channel-form').addEventListener('click', () => openChannelDialog());
@@ -816,6 +951,7 @@ async function start() {
   renderSkeletons(ui.clipList, 4);
   renderSkeletons(ui.channelList, 3);
   await Promise.all([loadHealth(), loadChannels(), loadClips()]);
+  loadVoicevox();
 }
 
 start();
