@@ -63,6 +63,19 @@
         <section id="panel-projects" class="source-panel" role="tabpanel" aria-labelledby="tab-projects">
           <div class="panel-heading"><div><h2>프로젝트</h2><p>저장된 작업을 이어서 편집합니다.</p></div><button id="new-project" class="icon-button" type="button" aria-label="새 프로젝트"><svg aria-hidden="true"><use href="#i-plus"></use></svg></button></div>
           <div class="project-flows" aria-label="프로젝트 생성 도구">
+            <div class="project-flow content-plan-flow">
+              <label class="field"><span>ContentPlan 선택</span><select id="content-plan-select"><option value="">ContentPlan을 선택하세요</option></select></label>
+              <div id="content-plan-summary" class="content-plan-summary" role="status" aria-live="polite">선택한 ContentPlan의 썸네일 프로젝트와 검수 경고가 표시됩니다.</div>
+            </div>
+            <details class="content-plan-create"><summary>새 ContentPlan 만들기</summary>
+              <div class="content-plan-form">
+                <label class="field"><span>콘텐츠 ID</span><input id="content-plan-id" type="text" maxlength="128" placeholder="예: jp_lesson_001" autocomplete="off" /></label>
+                <label class="field"><span>제목</span><input id="content-plan-title" type="text" maxlength="200" placeholder="콘텐츠 제목" autocomplete="off" /></label>
+                <label class="field"><span>콘텐츠 유형</span><select id="content-plan-type"><option value="discovery_long">Discovery Long</option><option value="training_long">Training Long</option><option value="discovery_short">Discovery Short</option><option value="learning_short">Learning Short</option></select></label>
+                <label class="field"><span>상태</span><select id="content-plan-status"><option value="DRAFT">초안</option><option value="PLANNED">기획</option><option value="IN_PROGRESS">제작 중</option><option value="READY">준비 완료</option><option value="PUBLISHED">게시됨</option></select></label>
+                <button id="create-content-plan" class="button button-secondary button-compact" type="button">ContentPlan 저장</button>
+              </div>
+            </details>
             <div class="project-flow">
               <label class="field"><span>A/B 변형 이름 <small>(선택)</small></span><input id="variant-name" type="text" maxlength="80" placeholder="기본 이름 사용" autocomplete="off" /></label>
               <button id="create-variant" class="button button-secondary button-compact" type="button" disabled>A/B 변형 만들기</button>

@@ -14,6 +14,7 @@ const els = {
   dialog: $('#new-project-dialog'), newProjectForm: $('#new-project-form'), newProjectName: $('#new-project-name'),
   createProject: $('#create-project'), dialogError: $('#dialog-error'), baseUpload: $('#base-upload'),
   variantName: $('#variant-name'), createVariant: $('#create-variant'), sourceFrameId: $('#source-frame-id'), createFromSource: $('#create-from-source'), projectFlowHelp: $('#project-flow-help'),
+  contentPlanSelect: $('#content-plan-select'), contentPlanSummary: $('#content-plan-summary'), contentPlanId: $('#content-plan-id'), contentPlanTitle: $('#content-plan-title'), contentPlanType: $('#content-plan-type'), contentPlanStatus: $('#content-plan-status'), createContentPlan: $('#create-content-plan'),
   baseSourceType: $('#base-source-type'), uploadDrop: $('#upload-drop'), canvas: $('#editor-canvas'),
   canvasWrap: $('#canvas-wrap'), canvasViewport: $('#canvas-viewport'), studioEmpty: $('#studio-empty'),
   canvasPreset: $('#canvas-preset'), canvasSize: $('#canvas-size'), workspaceError: $('#workspace-error'),
@@ -33,6 +34,7 @@ const state = {
   baseImage: null, baseImageUrl: null, zoom: 1, fitScale: 1, fontReady: false,
   history: [], historyIndex: -1, dirty: false, pointer: null, selectedTemplateId: null,
   operation: null,
+  contentPlans: [], selectedPlan: null,
 };
 
 const clone = (value) => structuredClone(value);
@@ -59,7 +61,12 @@ async function api(url, options = {}) {
     error.payload = payload;
     throw error;
   }
-  return payload?.data ?? payload;
+  if (payload?.data !== undefined) {
+    const data = payload.data;
+    if (payload.meta && data && typeof data === 'object') Object.defineProperty(data, '__meta', { value: payload.meta, enumerable: false });
+    return data;
+  }
+  return payload;
 }
 
 function setBusy(button, busy, label) {
@@ -401,6 +408,55 @@ function snapshotStillCurrent(snapshot) {
   return Boolean(snapshot && state.project && state.project.id === snapshot.id && state.project.revision === snapshot.revision && state.project.name === snapshot.name);
 }
 
+function renderContentPlanSummary(plan = state.selectedPlan, warnings = []) {
+  if (!plan) { els.contentPlanSummary.textContent = '선택한 ContentPlan의 썸네일 프로젝트와 검수 경고가 표시됩니다.'; return; }
+  const projects = Array.isArray(plan.thumbnailProjects) ? plan.thumbnailProjects : [];
+  const lineage = projects.length ? projects.map((project) => `${project.variantOfProjectId ? 'VARIANT' : 'PRIMARY'} · ${project.name}`).join(' / ') : '연결된 ThumbnailProject 없음';
+  const warningText = warnings.length ? ` ⚠ ${warnings.map((warning) => warning.message || warning.code || '검수 경고').join(' · ')}` : '';
+  els.contentPlanSummary.textContent = `${plan.contentId} · ${plan.title} · ${plan.status} · ${lineage}${warningText}`;
+}
+
+function renderContentPlans() {
+  els.contentPlanSelect.replaceChildren(new Option('ContentPlan을 선택하세요', ''));
+  state.contentPlans.forEach((plan) => els.contentPlanSelect.append(new Option(`${plan.contentId} · ${plan.title}`, plan.contentId)));
+  els.contentPlanSelect.value = state.selectedPlan?.contentId || '';
+  renderContentPlanSummary();
+}
+
+async function loadContentPlan(contentId) {
+  if (!contentId) { state.selectedPlan = null; renderContentPlans(); return; }
+  try {
+    const plan = await api(`/api/content-plans/${encodeURIComponent(contentId)}`);
+    state.selectedPlan = plan;
+    renderContentPlanSummary(plan, plan.__meta?.warnings || []);
+  } catch (error) { showError(els.leftError, errorMessage(error)); }
+}
+
+async function loadContentPlans() {
+  try {
+    const response = await api('/api/content-plans');
+    state.contentPlans = Array.isArray(response) ? response : [];
+    renderContentPlans();
+  } catch (error) { showError(els.leftError, `ContentPlan을 불러오지 못했습니다. ${errorMessage(error)}`); }
+}
+
+async function createContentPlan() {
+  if (state.operation) return;
+  const contentId = els.contentPlanId.value.trim();
+  const title = els.contentPlanTitle.value.trim();
+  if (!contentId || !title) { showError(els.leftError, 'ContentPlan 콘텐츠 ID와 제목을 입력하세요.'); return; }
+  state.operation = 'content-plan';
+  setBusy(els.createContentPlan, true, '저장 중…');
+  try {
+    const plan = await api('/api/content-plans', { method: 'POST', body: JSON.stringify({ contentId, title, contentType: els.contentPlanType.value, status: els.contentPlanStatus.value }) });
+    state.contentPlans = [plan, ...state.contentPlans.filter((item) => item.contentId !== plan.contentId)];
+    state.selectedPlan = plan;
+    renderContentPlans();
+    els.contentPlanId.value = ''; els.contentPlanTitle.value = '';
+  } catch (error) { showError(els.leftError, errorMessage(error)); }
+  finally { state.operation = null; setBusy(els.createContentPlan, false); renderProjects(); }
+}
+
 async function createVariant() {
   if (!state.project || state.operation) return;
   const snapshot = currentProjectSnapshot();
@@ -414,6 +470,10 @@ async function createVariant() {
     }));
     if (!snapshotStillCurrent(snapshot)) throw new Error('현재 편집 중인 프로젝트가 바뀌어 변형을 열지 않았습니다.');
     state.projects = [variant, ...state.projects.filter((project) => project.id !== variant.id)];
+    if (state.selectedPlan && variant.contentId === state.selectedPlan.contentId) {
+      state.selectedPlan.thumbnailProjects = [...(state.selectedPlan.thumbnailProjects || []), variant];
+      renderContentPlanSummary();
+    }
     await setProject(variant);
     els.variantName.value = '';
     toast(`A/B 변형을 열었습니다. 원본 ${snapshot.id}는 유지됩니다.`);
@@ -434,12 +494,21 @@ async function createFromSourceFrame() {
   state.operation = 'source-frame';
   setBusy(els.createFromSource, true, '가져오는 중…');
   showError(els.leftError, '');
+  els.projectFlowHelp.textContent = 'A/B 변형은 원본을 보존하고 새 프로젝트로 엽니다.';
   try {
-    const project = normalizeProject(await api(`${API.projects}/from-source-frame`, {
-      method: 'POST', body: JSON.stringify({ sourceFrameId }),
-    }));
+    const rawProject = await api(`${API.projects}/from-source-frame`, {
+      method: 'POST', body: JSON.stringify({ sourceFrameId, contentId: state.selectedPlan?.contentId || null }),
+    });
+    const project = normalizeProject(rawProject);
+    if (rawProject.__meta?.warnings?.length) {
+      els.projectFlowHelp.textContent = `⚠ ${rawProject.__meta.warnings.map((warning) => warning.message || warning.code).join(' · ')}`;
+    }
     if (snapshot && !snapshotStillCurrent(snapshot)) throw new Error('현재 편집 중인 프로젝트가 바뀌어 새 프로젝트를 열지 않았습니다.');
     state.projects = [project, ...state.projects.filter((item) => item.id !== project.id)];
+    if (state.selectedPlan && project.contentId === state.selectedPlan.contentId) {
+      state.selectedPlan.thumbnailProjects = [...(state.selectedPlan.thumbnailProjects || []), project];
+      renderContentPlanSummary();
+    }
     await setProject(project);
     toast(`소스 프레임으로 새 프로젝트를 열었습니다: ${project.name}`);
   } catch (error) {
@@ -988,6 +1057,8 @@ function bindEvents() {
   [els.newProject, els.emptyNewProject].forEach((button) => button.addEventListener('click', () => openNewProject()));
   els.createVariant.addEventListener('click', createVariant);
   els.createFromSource.addEventListener('click', createFromSourceFrame);
+  els.contentPlanSelect.addEventListener('change', () => loadContentPlan(els.contentPlanSelect.value));
+  els.createContentPlan.addEventListener('click', createContentPlan);
   $$('[data-close-new]').forEach((button) => button.addEventListener('click', () => els.dialog.close()));
   els.newProjectForm.addEventListener('submit', createProject);
   els.save.addEventListener('click', () => saveProject().catch(() => {}));
@@ -1031,7 +1102,7 @@ function bindEvents() {
 async function start() {
   bindEvents();
   try {
-    const [templates, fonts, projects] = await Promise.all([api(API.templates), api(API.fonts), api(API.projects)]);
+    const [templates, fonts, projects] = await Promise.all([api(API.templates), api(API.fonts), api(API.projects), loadContentPlans()]);
     state.templates = (templates || []).map(normalizeTemplate);
     state.projects = (projects || []).map(normalizeProject);
     renderTemplates(); renderProjects();

@@ -121,3 +121,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - ThumbnailProject의 공식 프레임 업로드는 클라이언트가 보낸 권리 상태를 사용하지 않고 `sourceFrameId`로 현재 SourceFrame 메타데이터·원본 bytes·hash·MIME·dimensions를 재검증한다. ID 없는 공식 프레임 업로드와 가짜 `reviewed` 상태를 차단한다.
 - 프로젝트 조회·편집·변형·자산 조회·export·베이스 교체 시 authoritative 검수 상태를 재조회한다. `unchecked`는 편집/미리보기만 허용하고, `reviewed`만 export를 허용하며, `rejected`는 모든 사용을 차단한다.
 - 검증: 집중 40/40, 전체 `npm test` 418/418, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 FFmpeg/VOICEVOX 엔진 호출은 하지 않았다.
+
+## 2026-09-18 Thumbnail Studio ContentPlan UI 연결 완료
+
+- `08_ReviewEditor_v2`: Studio에서 ContentPlan 목록 조회·선택과 최소 생성 폼을 제공한다. 선택한 `contentId`를 SourceFrame 기반 ThumbnailProject 생성 요청에 전달하고, 연결된 PRIMARY/VARIANT 목록과 `unchecked` 검수 경고를 표시한다.
+- 기존 A/B 변형·SourceFrame 요청 잠금, 늦은 응답 보호, 오류 시 입력 보존, 반응형 레이아웃을 유지했다.
+- 검증: `node --check src/app/web/studio.js`, `npm run typecheck`, `npm run build`, `npm test` 418/418, `git diff --check` 통과. 로컬 `/studio`에서 ContentPlan 선택/생성 UI와 경고 영역을 확인했다. 실제 SourceFrame 생성과 외부 게시 호출은 사용자 미디어·서비스 환경 검증 대상이다.
