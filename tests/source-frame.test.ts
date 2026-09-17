@@ -145,6 +145,31 @@ function runner(options: {
   return { run, calls };
 }
 
+test('adds revision to a pre-review source frame database', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'source-frame-migration-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const dbPath = join(root, 'legacy.sqlite');
+  const legacy = new DatabaseSync(dbPath);
+  legacy.exec(`
+    CREATE TABLE source_frames (
+      id TEXT PRIMARY KEY,
+      source_clip_id TEXT NOT NULL,
+      timestamp_ms INTEGER NOT NULL
+    );
+  `);
+  legacy.close();
+  const clips = new SourceRepository(':memory:');
+  const migrated = new SourceFrameRepository(dbPath, clips);
+  migrated.close();
+  clips.close();
+  const inspected = new DatabaseSync(dbPath);
+  const columns = inspected.prepare('PRAGMA table_info(source_frames)').all() as { name: string; dflt_value: string | null }[];
+  inspected.close();
+  const revision = columns.find(column => column.name === 'revision');
+  assert.ok(revision);
+  assert.equal(revision.dflt_value, '0');
+});
+
 test('extracts a requested frame with exact identity, timing arguments, dimensions and hash', async (t) => {
   const state = fixture(t);
   const process = runner();
@@ -188,6 +213,35 @@ test('same clip and timestamp is idempotent and does not rerun FFmpeg', async (t
   assert.equal(process.calls.length, 2);
   assert.deepEqual(service.listFrames({ clipId: state.clipId }), [first.frame]);
   assert.deepEqual(service.getFrame(first.frame.id), first.frame);
+});
+
+test('rights review transitions are revision-gated, persistent and rejected is terminal', async (t) => {
+  const state = fixture(t);
+  const service = new SourceFrameService({
+    projectRoot: state.root, clips: state.clips, frames: state.frames, run: runner({ frameBytes: png() }).run,
+  });
+  const created = (await service.createFrame(state.clipId, { timestampMs: 2_050, format: 'png' })).frame;
+  assert.equal(created.revision, 0);
+  const reviewed = service.reviewFrame(created.id, { expectedRevision: 0, status: 'reviewed', notes: '사용 범위 확인 완료' });
+  assert.equal(reviewed.rightsReviewStatus, 'reviewed');
+  assert.equal(reviewed.rightsReviewNotes, '사용 범위 확인 완료');
+  assert.equal(reviewed.revision, 1);
+  expectFrameError(() => service.reviewFrame(created.id, {
+    expectedRevision: 0, status: 'rejected', notes: 'stale',
+  }), 'SOURCE_FRAME_REVISION_CONFLICT', 409);
+  expectFrameError(() => service.reviewFrame(created.id, {
+    expectedRevision: 1, status: 'reviewed', notes: 'same',
+  }), 'SOURCE_FRAME_REVIEW_TRANSITION_INVALID', 409);
+  const rejected = service.reviewFrame(created.id, { expectedRevision: 1, status: 'rejected', notes: '후속 검수에서 거부' });
+  assert.equal(rejected.rightsReviewStatus, 'rejected');
+  assert.equal(rejected.revision, 2);
+  expectFrameError(() => service.reviewFrame(created.id, {
+    expectedRevision: 2, status: 'reviewed', notes: '되돌리기',
+  }), 'SOURCE_FRAME_REVIEW_TRANSITION_INVALID', 409);
+
+  const reopened = new SourceFrameRepository(state.frameDb, state.clips);
+  assert.deepEqual(reopened.getFrame(created.id), rejected);
+  reopened.close();
 });
 
 test('accepts a valid JPEG and verifies stored bytes when reading the image', async (t) => {
@@ -363,6 +417,19 @@ test('HTTP creates, reuses, lists and gets frames with the existing JSON error e
   const createdBody = await created.json();
   assert.equal(createdBody.meta.reused, false);
   const id = createdBody.data.id;
+  assert.equal(createdBody.data.revision, 0);
+  const reviewed = await request(`/api/source-frames/${id}/review`, 'PATCH', {
+    expectedRevision: 0, status: 'reviewed', notes: 'HTTP 검수 완료',
+  });
+  assert.equal(reviewed.status, 200);
+  const reviewedFrame = (await reviewed.json()).data;
+  assert.equal(reviewedFrame.rightsReviewStatus, 'reviewed');
+  assert.equal(reviewedFrame.revision, 1);
+  const staleReview = await request(`/api/source-frames/${id}/review`, 'PATCH', {
+    expectedRevision: 0, status: 'rejected', notes: 'stale',
+  });
+  assert.equal(staleReview.status, 409);
+  assert.equal((await staleReview.json()).error.code, 'SOURCE_FRAME_REVISION_CONFLICT');
   const reused = await request(`/api/source-clips/${state.clipId}/frames`, 'POST', { timestampMs: 5_000 });
   assert.equal(reused.status, 200);
   assert.equal((await reused.json()).meta.reused, true);

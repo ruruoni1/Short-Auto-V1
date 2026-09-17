@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import type { SourceRepository } from '../clips/repository.js';
 import {
   ListSourceFramesQuerySchema,
+  ReviewSourceFrameInputSchema,
   SourceFrameSchema,
   type ListSourceFramesQuery,
   type SourceFrame,
@@ -29,7 +30,8 @@ const COLUMNS = `
   work_title AS workTitle,
   episode,
   source_url AS sourceUrl,
-  created_at AS createdAt
+  created_at AS createdAt,
+  revision
 `;
 
 export class SourceFrameError extends Error {
@@ -99,10 +101,15 @@ export class SourceFrameRepository {
         episode TEXT,
         source_url TEXT NOT NULL,
         created_at TEXT NOT NULL,
+        revision INTEGER NOT NULL DEFAULT 0 CHECK (revision >= 0),
         UNIQUE (source_clip_id, timestamp_ms)
       );
       CREATE INDEX IF NOT EXISTS ix_source_frames_clip_time ON source_frames(source_clip_id, timestamp_ms);
     `);
+    const columns = this.#db.prepare('PRAGMA table_info(source_frames)').all() as { name: string }[];
+    if (!columns.some(column => column.name === 'revision')) {
+      this.#db.exec('ALTER TABLE source_frames ADD COLUMN revision INTEGER NOT NULL DEFAULT 0 CHECK (revision >= 0)');
+    }
   }
 
   close(): void {
@@ -132,19 +139,19 @@ export class SourceFrameRepository {
 
   insertFrame(input: InsertSourceFrame): InsertSourceFrameResult {
     const id = input.id ?? randomUUID();
-    const frame = SourceFrameSchema.parse({ ...input, id, createdAt: input.createdAt ?? new Date().toISOString() });
+    const frame = SourceFrameSchema.parse({ ...input, id, createdAt: input.createdAt ?? new Date().toISOString(), revision: 0 });
     this.#validateIdentity(frame);
     try {
       this.#db.prepare(`
         INSERT INTO source_frames (
           id, source_clip_id, source_channel_id, youtube_video_id, timestamp_ms, local_path,
           format, mime_type, width, height, byte_length, sha256, candidate_type,
-          rights_review_status, rights_review_notes, work_title, episode, source_url, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          rights_review_status, rights_review_notes, work_title, episode, source_url, created_at, revision
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         frame.id, frame.sourceClipId, frame.sourceChannelId, frame.youtubeVideoId, frame.timestampMs, frame.localPath,
         frame.format, frame.mimeType, frame.width, frame.height, frame.byteLength, frame.sha256, frame.candidateType,
-        frame.rightsReviewStatus, frame.rightsReviewNotes, frame.workTitle, frame.episode, frame.sourceUrl, frame.createdAt,
+        frame.rightsReviewStatus, frame.rightsReviewNotes, frame.workTitle, frame.episode, frame.sourceUrl, frame.createdAt, frame.revision,
       );
       return { frame: this.getFrame(frame.id), created: true };
     } catch (error) {
@@ -155,6 +162,29 @@ export class SourceFrameRepository {
       }
       throw error;
     }
+  }
+
+  reviewFrame(id: string, input: unknown): SourceFrame {
+    const parsed = ReviewSourceFrameInputSchema.safeParse(input);
+    if (!parsed.success) throw new SourceFrameError('INVALID_INPUT', '검수 상태, 메모와 revision을 확인하세요.');
+    const current = this.getFrame(id);
+    if (current.revision !== parsed.data.expectedRevision) {
+      throw new SourceFrameError('SOURCE_FRAME_REVISION_CONFLICT', '다른 검수 변경이 먼저 저장되었습니다.', 409);
+    }
+    const allowed = current.rightsReviewStatus === 'unchecked'
+      || (current.rightsReviewStatus === 'reviewed' && parsed.data.status === 'rejected');
+    if (!allowed || current.rightsReviewStatus === parsed.data.status) {
+      throw new SourceFrameError('SOURCE_FRAME_REVIEW_TRANSITION_INVALID', '현재 상태에서는 요청한 권리 검수 상태로 변경할 수 없습니다.', 409);
+    }
+    const result = this.#db.prepare(`
+      UPDATE source_frames
+      SET rights_review_status = ?, rights_review_notes = ?, revision = revision + 1
+      WHERE id = ? AND revision = ?
+    `).run(parsed.data.status, parsed.data.notes, id, parsed.data.expectedRevision);
+    if (result.changes !== 1) {
+      throw new SourceFrameError('SOURCE_FRAME_REVISION_CONFLICT', '다른 검수 변경이 먼저 저장되었습니다.', 409);
+    }
+    return this.getFrame(id);
   }
 
   #validateIdentity(frame: SourceFrame): SourceFrame {

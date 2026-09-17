@@ -114,3 +114,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - ThumbnailProject는 기존 JSON과 호환되도록 `contentId: null` 기본값을 지원한다. ContentPlan에 연결된 PRIMARY는 콘텐츠별 1개로 제한하고, VARIANT는 PRIMARY의 `variantOfProjectId`와 `contentId`를 보존한다. ContentPlan 조회 응답에는 연결된 썸네일 목록을 포함한다.
 - SourceFrame `unchecked`는 생성·편집·미리보기와 계획의 비최종 상태에서 허용하고 경고를 반환한다. `reviewed`만 최종 export 및 READY/PUBLISHED 상태에 사용할 수 있으며 `rejected`는 생성·업로드·편집·변형·자산 조회를 차단한다.
 - 검증: `npm test` 416/416, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 FFmpeg/VOICEVOX 엔진과 외부 게시 호출은 여전히 사용자 환경 검증 대상이다.
+
+## 2026-09-18 SourceFrame 권리 검수 게이트 보강 완료
+
+- `01_Core_v2`: SourceFrame에 revision 기반 검수 전이를 추가하고 `PATCH /api/source-frames/:id/review`를 연결했다. `unchecked → reviewed/rejected`, `reviewed → rejected`만 허용하며 `rejected`는 종단 상태다.
+- ThumbnailProject의 공식 프레임 업로드는 클라이언트가 보낸 권리 상태를 사용하지 않고 `sourceFrameId`로 현재 SourceFrame 메타데이터·원본 bytes·hash·MIME·dimensions를 재검증한다. ID 없는 공식 프레임 업로드와 가짜 `reviewed` 상태를 차단한다.
+- 프로젝트 조회·편집·변형·자산 조회·export·베이스 교체 시 authoritative 검수 상태를 재조회한다. `unchecked`는 편집/미리보기만 허용하고, `reviewed`만 export를 허용하며, `rejected`는 모든 사용을 차단한다.
+- 검증: 집중 40/40, 전체 `npm test` 418/418, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 FFmpeg/VOICEVOX 엔진 호출은 하지 않았다.

@@ -106,6 +106,10 @@ export class SourceFrameService {
     return this.#frames.getFrame(id);
   }
 
+  reviewFrame(id: string, input: unknown): SourceFrame {
+    return this.#frames.reviewFrame(id, input);
+  }
+
   getFrameImage(id: string): SourceFrameImage {
     const frame = this.#frames.getFrame(id);
     let path: string;

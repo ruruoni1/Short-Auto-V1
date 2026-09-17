@@ -72,6 +72,7 @@ export const BaseImageTransformSchema = z.strictObject({
 });
 
 export const SourceFrameReferenceSchema = z.strictObject({
+  sourceFrameId: id.nullable().optional().default(null),
   sourceClipId: id,
   youtubeVideoId: z.string().regex(/^[A-Za-z0-9_-]{11}$/),
   sourceChannelId: id,
@@ -228,7 +229,7 @@ export const RevisionInputSchema = z.strictObject({
 export const UploadBaseImageInputSchema = RevisionInputSchema.extend({
   sourceType: ThumbnailSourceTypeSchema,
   bytes: z.instanceof(Uint8Array),
-  sourceFrame: SourceFrameReferenceSchema.optional(),
+  sourceFrameId: id.optional(),
 });
 
 export const StoreThumbnailExportInputSchema = RevisionInputSchema.extend({

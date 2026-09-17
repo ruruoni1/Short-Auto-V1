@@ -10,6 +10,7 @@ import { createAppServer } from '../src/app/server.js';
 import { inspectFrameImage } from '../src/app/source-frames/image.js';
 import { SourceFrameRepository } from '../src/app/source-frames/repository.js';
 import { SourceFrameService } from '../src/app/source-frames/service.js';
+import { createSourceFrameRoute } from '../src/app/source-frames/routes.js';
 import { routeThumbnails } from '../src/app/thumbnail-routes.js';
 import { ThumbnailRepository } from '../src/app/thumbnails/repository.js';
 
@@ -63,10 +64,11 @@ async function setup(t: TestContext) {
   });
   const frames = new SourceFrameRepository(join(root, 'data', 'source-frames.sqlite'), clips);
   const sourceFrames = new SourceFrameService({ projectRoot: root, clips, frames });
-  const thumbnails = new ThumbnailRepository(root, fonts.listFonts());
+  const thumbnails = new ThumbnailRepository(root, fonts.listFonts(), sourceFrames);
   const server = createAppServer({ repository: clips, root, youtube: null,
     thumbnailRoute: (req, res, path, method, body, json) =>
       routeThumbnails(thumbnails, req, res, path, method, body, json, fonts, sourceFrames),
+    sourceFrameRoute: createSourceFrameRoute(sourceFrames),
   });
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(async () => {
@@ -95,7 +97,7 @@ async function setup(t: TestContext) {
     }).frame;
     return { frame: result, absolutePath };
   }
-  return { root, request, thumbnails, addFrame };
+  return { root, request, thumbnails, frames, sourceFrames, addFrame };
 }
 
 test('creates independent PNG and JPEG thumbnail projects with complete source identity', async t => {
@@ -119,6 +121,7 @@ test('creates independent PNG and JPEG thumbnail projects with complete source i
   assert.equal(first.baseImage.mimeType, 'image/png');
   assert.equal(first.baseImage.sha256, pngSource.frame.sha256);
   assert.deepEqual(first.baseImage.sourceFrame, {
+    sourceFrameId: pngSource.frame.id,
     sourceClipId: pngSource.frame.sourceClipId,
     sourceChannelId: pngSource.frame.sourceChannelId,
     youtubeVideoId: pngSource.frame.youtubeVideoId,
@@ -145,6 +148,27 @@ test('creates independent PNG and JPEG thumbnail projects with complete source i
   assert.notEqual(duplicate.id, first.id);
   assert.deepEqual(duplicate.baseImage.sourceFrame, first.baseImage.sourceFrame);
 
+  const manual = state.thumbnails.createProject({ name: '일반 업로드 경로', templateId: 'shorts_discovery_v1' });
+  const spoofed = await state.request(`/api/thumbnail-projects/${manual.id}/assets`, {
+    expectedRevision: 0,
+    sourceType: 'OFFICIAL_CLIP_FRAME',
+    sourceFrameId: pngSource.frame.id,
+    sourceFrame: { rightsReviewStatus: 'reviewed' },
+    dataBase64: pngBytes.toString('base64'),
+  });
+  assert.equal(spoofed.status, 400);
+  assert.equal(state.thumbnails.getProject(manual.id).baseImage, null);
+  const authoritativeUpload = await state.request(`/api/thumbnail-projects/${manual.id}/assets`, {
+    expectedRevision: 0,
+    sourceType: 'OFFICIAL_CLIP_FRAME',
+    sourceFrameId: pngSource.frame.id,
+    dataBase64: pngBytes.toString('base64'),
+  });
+  assert.equal(authoritativeUpload.status, 201);
+  const authoritativeProject = (await authoritativeUpload.json()).data.project;
+  assert.equal(authoritativeProject.baseImage.sourceFrame.sourceFrameId, pngSource.frame.id);
+  assert.equal(authoritativeProject.baseImage.sourceFrame.rightsReviewStatus, 'unchecked');
+
   const jpegBytes = readFileSync(join(process.cwd(), 'tests', 'fixtures', 'thumbnail-http-1280x720.jpg'));
   const jpegSource = state.addFrame('landscape-jpeg', 2_500, jpegBytes, 'jpeg');
   const jpegResponse = await state.request('/api/thumbnail-projects/from-source-frame', {
@@ -160,8 +184,26 @@ test('creates independent PNG and JPEG thumbnail projects with complete source i
   assert.equal(jpegProject.baseImage.height, 720);
   assert.deepEqual(readFileSync(join(state.root, ...jpegProject.baseImage.path.split('/'))), jpegBytes);
 
+  const reviewed = state.sourceFrames.reviewFrame(pngSource.frame.id, {
+    expectedRevision: 0, status: 'reviewed', notes: '썸네일 사용 검수 완료',
+  });
+  assert.equal(reviewed.rightsReviewStatus, 'reviewed');
+  assert.equal(state.thumbnails.getProject(first.id).baseImage!.sourceFrame!.rightsReviewStatus, 'reviewed');
+  const allowedExport = await state.request(`/api/thumbnail-projects/${first.id}/exports`, {
+    expectedRevision: 0, format: 'png', dataBase64: png(1080, 1920).toString('base64'),
+  });
+  assert.equal(allowedExport.status, 201);
+  state.sourceFrames.reviewFrame(pngSource.frame.id, {
+    expectedRevision: 1, status: 'rejected', notes: '후속 권리 검수에서 거부',
+  });
+  const replacement = await state.request(`/api/thumbnail-projects/${first.id}/assets`, {
+    expectedRevision: 1, sourceType: 'USER_IMAGE', dataBase64: png(100, 100).toString('base64'),
+  });
+  assert.equal(replacement.status, 409);
+  assert.equal((await replacement.json()).error.code, 'SOURCE_FRAME_REJECTED');
+
   assert.deepEqual(readFileSync(pngSource.absolutePath), sourceBefore);
-  assert.equal(state.thumbnails.listProjects().length, 3);
+  assert.equal(state.thumbnails.listProjects().length, 4);
 });
 
 test('rejects missing, injected and tampered source frames without creating a project', async t => {

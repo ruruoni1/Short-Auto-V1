@@ -32,6 +32,11 @@ export function createSourceFrameRoute(service: SourceFrameService) {
       res.end(result.bytes);
       return true;
     }
+    const review = path.match(/^\/api\/source-frames\/([^/]+)\/review$/);
+    if (method === 'PATCH' && review) {
+      json(res, 200, { data: service.reviewFrame(review[1]!, await body(req)) });
+      return true;
+    }
     const frame = path.match(/^\/api\/source-frames\/([^/]+)$/);
     if (method === 'GET' && frame) {
       json(res, 200, { data: service.getFrame(frame[1]!) });

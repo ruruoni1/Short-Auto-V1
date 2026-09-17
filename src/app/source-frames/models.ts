@@ -32,6 +32,7 @@ export const SourceFrameSchema = z.strictObject({
   episode: z.string().min(1).nullable(),
   sourceUrl: z.url(),
   createdAt: isoDateTime,
+  revision: z.number().int().nonnegative(),
 }).superRefine((frame, context) => {
   const expectedMimeType = frame.format === 'jpeg' ? 'image/jpeg' : 'image/png';
   if (frame.mimeType !== expectedMimeType) {
@@ -50,7 +51,14 @@ export const ListSourceFramesQuerySchema = z.strictObject({
   clipId: id.optional(),
 });
 
+export const ReviewSourceFrameInputSchema = z.strictObject({
+  expectedRevision: z.number().int().nonnegative(),
+  status: z.enum(['reviewed', 'rejected']),
+  notes: z.string().trim().min(1).max(2_000),
+});
+
 export type SourceFrameFormat = z.infer<typeof SourceFrameFormatSchema>;
 export type SourceFrame = z.infer<typeof SourceFrameSchema>;
 export type CreateSourceFrameInput = z.input<typeof CreateSourceFrameInputSchema>;
 export type ListSourceFramesQuery = z.infer<typeof ListSourceFramesQuerySchema>;
+export type ReviewSourceFrameInput = z.infer<typeof ReviewSourceFrameInputSchema>;

@@ -2,7 +2,6 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
 import { ThumbnailRepository, ThumbnailRepositoryError } from './thumbnails/repository.js';
 import { FontRegistry } from './fonts/registry.js';
-import { SourceFrameReferenceSchema } from './thumbnails/models.js';
 import type { SourceFrameService } from './source-frames/service.js';
 
 type ReadBody = (req: IncomingMessage, limit?: number) => Promise<unknown>;
@@ -11,7 +10,7 @@ const binaryInput = z.object({
   expectedRevision: z.number().int().nonnegative(),
   dataBase64: z.string().max(28_000_000),
   sourceType: z.enum(['AI_GENERATED','USER_IMAGE','RECREATED_IMAGE','OFFICIAL_CLIP_FRAME']).optional(),
-  sourceFrame: SourceFrameReferenceSchema.optional(),
+  sourceFrameId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/).optional(),
   format: z.enum(['png','jpeg']).optional(),
 }).strict();
 const sourceFrameProjectInput = z.strictObject({
@@ -33,7 +32,7 @@ function decode(value: string): Buffer {
 }
 export async function routeThumbnails(repo: ThumbnailRepository, req: IncomingMessage, res: ServerResponse,
   path: string, method: string, body: ReadBody, json: SendJson, fonts: FontRegistry,
-  sourceFrames?: Pick<SourceFrameService, 'getFrameImage'>,
+  sourceFrames?: Pick<SourceFrameService, 'getFrame' | 'getFrameImage'>,
   contentPlans?: { getContentPlan(contentId: string): unknown }): Promise<boolean> {
   const assertContentPlan = (contentId: string | null | undefined) => {
     if (!contentId) return;
@@ -68,6 +67,7 @@ export async function routeThumbnails(repo: ThumbnailRepository, req: IncomingMe
       variantOfProjectId: null,
     }, {
       reference: {
+        sourceFrameId: frame.id,
         sourceClipId: frame.sourceClipId,
         sourceChannelId: frame.sourceChannelId,
         youtubeVideoId: frame.youtubeVideoId,
@@ -132,10 +132,10 @@ export async function routeThumbnails(repo: ThumbnailRepository, req: IncomingMe
     if (match[2] === 'assets') {
       if (!input.sourceType || input.format) throw Object.assign(new Error('이미지 소스 유형을 확인하세요.'),{status:400});
       const result = repo.uploadBaseImage(id,{expectedRevision:input.expectedRevision,sourceType:input.sourceType,bytes,
-        ...(input.sourceFrame ? { sourceFrame: input.sourceFrame } : {})});
+        ...(input.sourceFrameId ? { sourceFrameId: input.sourceFrameId } : {})});
       json(res,201,{data:result});
     } else {
-      if (!input.format || input.sourceType || input.sourceFrame) throw Object.assign(new Error('출력 형식을 확인하세요.'),{status:400});
+      if (!input.format || input.sourceType || input.sourceFrameId) throw Object.assign(new Error('출력 형식을 확인하세요.'),{status:400});
       const result = repo.storeExport(id,{expectedRevision:input.expectedRevision,format:input.format,bytes});
       json(res,201,{data:result});
     }

@@ -104,7 +104,11 @@ test('Thumbnail HTTP rejects invalid binaries, format/size mismatches and path i
     assert.equal((await request(`${path}/assets`, 'POST', { expectedRevision: 0, sourceType: 'USER_IMAGE', dataBase64 })).status, 400);
   }
   const dataBase64 = png(32, 32).toString('base64');
-  assert.equal((await request(`${path}/assets`, 'POST', { expectedRevision: 0, sourceType: 'OFFICIAL_CLIP_FRAME', dataBase64 })).status, 400);
+  const missingFrameId = await request(`${path}/assets`, 'POST', {
+    expectedRevision: 0, sourceType: 'OFFICIAL_CLIP_FRAME', dataBase64,
+  });
+  assert.equal(missingFrameId.status, 400);
+  assert.equal((await missingFrameId.json()).error.code, 'SOURCE_FRAME_ID_REQUIRED');
   assert.equal((await request(`${path}/assets`, 'POST', { expectedRevision: 0, sourceType: 'USER_IMAGE', dataBase64, format: 'png' })).status, 400);
   assert.equal((await request(`${path}/exports`, 'POST', { expectedRevision: 0, format: 'png', dataBase64 })).status, 400);
   assert.equal((await request(`${path}/exports`, 'POST', { expectedRevision: 0, format: 'jpeg', dataBase64 })).status, 400);

@@ -23,9 +23,9 @@ mkdirSync(APP_PATHS.data, { recursive: true });
 const repository = new SourceRepository(join(APP_PATHS.data, 'sources.sqlite'));
 const youtube = process.env.YOUTUBE_API_KEY ? new YouTubeClient(process.env.YOUTUBE_API_KEY) : null;
 const fonts = new FontRegistry(APP_PATHS.projectRoot);
-const thumbnails = new ThumbnailRepository(APP_PATHS.projectRoot, fonts.listFonts());
 const sourceFrames = new SourceFrameRepository(join(APP_PATHS.data, 'source-frames.sqlite'), repository);
 const sourceFrameService = new SourceFrameService({ projectRoot: APP_PATHS.projectRoot, clips: repository, frames: sourceFrames });
+const thumbnails = new ThumbnailRepository(APP_PATHS.projectRoot, fonts.listFonts(), sourceFrameService);
 const contentPlans = new ContentPlanRepository(APP_PATHS.projectRoot, { clips: repository, frames: sourceFrames });
 const voicevox = new VoicevoxService(
   new VoicevoxClient(process.env.VOICEVOX_ENDPOINT ? { endpoint: process.env.VOICEVOX_ENDPOINT } : {}),

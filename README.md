@@ -130,3 +130,5 @@ ContentPlan은 `contentId`, `contentType`, `title`, `status`, `createdAt`, `upda
 
 SourceFrame이 `unchecked`이면 썸네일 생성·편집·미리보기는 경고와 함께 허용됩니다. 최종 export와 ContentPlan의 `READY`/`PUBLISHED` 전환은 `reviewed` 프레임만 허용하고, `rejected` 프레임은 차단합니다.
 
+SourceFrame 권리 검수는 `PATCH /api/source-frames/:id/review`에서 `expectedRevision`, `status`, `notes`를 받아 처리합니다. 공식 프레임 업로드는 `sourceFrameId`를 기준으로 서버가 현재 프레임과 원본 이미지의 상태·출처·해시를 재검증합니다.
+
