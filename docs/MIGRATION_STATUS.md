@@ -106,3 +106,11 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 요청 중복 클릭은 기존 operation 잠금으로 차단하며, 늦은 응답이 다른 편집 상태를 덮어쓰지 않도록 요청 전 project snapshot을 확인한다. SourceFrame 오류는 입력을 유지한 채 aria-live 오류 영역에 표시한다.
 - 검증: `node --check src/app/web/studio.js`, `npm run typecheck`, `npm run build`, `npm test` 412/412, `git diff --check` 통과. 로컬 `/studio`에서 SourceFrame 누락 오류와 새 UI 컨트롤을 확인했다.
 - 실제 SourceFrame/FFmpeg 실행과 성공 생성은 아직 사용자 미디어가 없어 미검증이다. 다음 작업은 ContentPlan 연결 여부를 설계한 뒤 필요한 경우 구현하는 것이다.
+
+## 2026-09-18 Phase E ContentPlan·ThumbnailProject 관계 구현 완료
+
+- `09_Content_Manager_v2`: ContentPlan JSON 영속성 및 `GET/POST/PATCH /api/content-plans`를 추가했다. 필수 필드는 `contentId`, `contentType`, `title`, `status`, `createdAt`, `updatedAt`로 고정하고 hook/source/published 필드는 선택적으로 저장한다. ContentPlan에는 `thumbnailProjectId`를 두지 않는다.
+- ContentPlan의 `contentType`은 기존 Core의 4개 값(`discovery_long`, `training_long`, `discovery_short`, `learning_short`)을 재사용한다. 계획 상태는 `DRAFT`, `PLANNED`, `IN_PROGRESS`, `READY`, `PUBLISHED`로 두며 READY/PUBLISHED 전이는 검수 완료 프레임만 허용한다.
+- ThumbnailProject는 기존 JSON과 호환되도록 `contentId: null` 기본값을 지원한다. ContentPlan에 연결된 PRIMARY는 콘텐츠별 1개로 제한하고, VARIANT는 PRIMARY의 `variantOfProjectId`와 `contentId`를 보존한다. ContentPlan 조회 응답에는 연결된 썸네일 목록을 포함한다.
+- SourceFrame `unchecked`는 생성·편집·미리보기와 계획의 비최종 상태에서 허용하고 경고를 반환한다. `reviewed`만 최종 export 및 READY/PUBLISHED 상태에 사용할 수 있으며 `rejected`는 생성·업로드·편집·변형·자산 조회를 차단한다.
+- 검증: `npm test` 416/416, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 FFmpeg/VOICEVOX 엔진과 외부 게시 호출은 여전히 사용자 환경 검증 대상이다.

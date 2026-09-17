@@ -253,11 +253,13 @@ export class ThumbnailRepository {
     if (parsed.variantOfProjectId !== null) {
       throw new ThumbnailRepositoryError('VARIANT_ENDPOINT_REQUIRED', 'A/B 변형은 원본 프로젝트의 variant API로 생성하세요.');
     }
+    this.#assertPrimaryAvailable(parsed.contentId);
     const id = randomUUID();
     const timestamp = new Date().toISOString();
     const project = parseInput(ThumbnailProjectSchema, {
       schemaVersion: 1,
       id,
+      contentId: parsed.contentId,
       channelProfile: parsed.channelProfile,
       templateId: template.id,
       name: parsed.name,
@@ -287,6 +289,7 @@ export class ThumbnailRepository {
     const parsed = parseInput(CreateThumbnailVariantInputSchema, input);
     return this.#withLock(projectId, () => {
       const source = this.#readProject(projectId);
+      this.#assertSourceFrameUsable(source);
       const baseBytes = source.baseImage ? this.#readVerifiedBaseImage(source) : null;
       const id = randomUUID();
       const timestamp = new Date(Math.max(
@@ -309,7 +312,7 @@ export class ThumbnailRepository {
         channelProfile: parsed.channelProfile ?? source.channelProfile,
         baseImage,
         exports: [],
-        variantOfProjectId: source.id,
+        variantOfProjectId: source.variantOfProjectId ?? source.id,
         createdAt: timestamp,
         updatedAt: timestamp,
         revision: 0,
@@ -344,6 +347,10 @@ export class ThumbnailRepository {
     if (!templateDefinition) throw new ThumbnailRepositoryError('TEMPLATE_NOT_FOUND', '템플릿을 찾을 수 없습니다.', 404);
     const template = this.#materializeTemplate(templateDefinition);
     const reference = parseInput(SourceFrameReferenceSchema, source.reference);
+    if (reference.rightsReviewStatus === 'rejected') {
+      throw new ThumbnailRepositoryError('SOURCE_FRAME_REJECTED', '거부된 소스 프레임은 사용할 수 없습니다.', 409);
+    }
+    this.#assertPrimaryAvailable(parsed.contentId);
     const inspected = inspectImage(source.bytes);
     if (inspected.info.mimeType !== source.mimeType || inspected.info.width !== source.width
       || inspected.info.height !== source.height || inspected.bytes.length !== source.byteLength
@@ -359,6 +366,7 @@ export class ThumbnailRepository {
     const project = parseInput(ThumbnailProjectSchema, {
       schemaVersion: 1,
       id,
+      contentId: parsed.contentId,
       channelProfile: parsed.channelProfile,
       templateId: template.id,
       name: parsed.name,
@@ -406,6 +414,7 @@ export class ThumbnailRepository {
     const parsed = parseInput(UpdateThumbnailProjectInputSchema, input);
     return this.#withLock(projectId, () => {
       const current = this.#readProject(projectId);
+      this.#assertSourceFrameUsable(current);
       this.#assertRevision(current, parsed.expectedRevision);
       if (parsed.layers !== undefined) this.#assertLayerFonts(parsed.layers);
       const timestamp = new Date().toISOString();
@@ -445,6 +454,9 @@ export class ThumbnailRepository {
     const sourceFrame: SourceFrameReference | null = parsed.sourceFrame ?? null;
     if ((parsed.sourceType === 'OFFICIAL_CLIP_FRAME') !== (sourceFrame !== null)) {
       throw new ThumbnailRepositoryError('SOURCE_REFERENCE_REQUIRED', '공식 클립 프레임의 출처와 권리 검수 정보를 입력하세요.');
+    }
+    if (sourceFrame?.rightsReviewStatus === 'rejected') {
+      throw new ThumbnailRepositoryError('SOURCE_FRAME_REJECTED', '거부된 소스 프레임은 사용할 수 없습니다.', 409);
     }
     return this.#withLock(projectId, () => {
       const current = this.#readProject(projectId);
@@ -489,6 +501,9 @@ export class ThumbnailRepository {
     }
     return this.#withLock(projectId, () => {
       const current = this.#readProject(projectId);
+      if (current.baseImage?.sourceFrame && current.baseImage.sourceFrame.rightsReviewStatus !== 'reviewed') {
+        throw new ThumbnailRepositoryError('SOURCE_FRAME_REVIEW_REQUIRED', '최종 렌더에는 권리 검수가 완료된 소스 프레임만 사용할 수 있습니다.', 409);
+      }
       this.#assertRevision(current, parsed.expectedRevision);
       if (inspected.info.width !== current.canvas.width || inspected.info.height !== current.canvas.height) {
         throw new ThumbnailRepositoryError('EXPORT_SIZE_MISMATCH', `출력 이미지는 ${current.canvas.width}×${current.canvas.height}px이어야 합니다.`);
@@ -519,6 +534,7 @@ export class ThumbnailRepository {
 
   getAsset(projectId: string, fileName: string): { bytes: Buffer; mimeType: string } {
     const project = this.getProject(projectId);
+    this.#assertSourceFrameUsable(project);
     this.#assertFileName(fileName);
     if (project.baseImage?.fileName !== fileName) throw new ThumbnailRepositoryError('ASSET_NOT_FOUND', '이미지를 찾을 수 없습니다.', 404);
     const file = join(this.#projectDirectory(projectId), 'assets', fileName);
@@ -678,6 +694,19 @@ export class ThumbnailRepository {
       if (!font.weights.includes(layer.fontWeight)) {
         throw new ThumbnailRepositoryError('FONT_WEIGHT_NOT_REGISTERED', `등록되지 않은 폰트 굵기입니다: ${layer.fontFamily} ${layer.fontWeight}`);
       }
+    }
+  }
+
+  #assertPrimaryAvailable(contentId: string | null): void {
+    if (contentId === null) return;
+    if (this.listProjects().some(project => project.contentId === contentId && project.variantOfProjectId === null)) {
+      throw new ThumbnailRepositoryError('CONTENT_PRIMARY_EXISTS', '이 콘텐츠에는 이미 PRIMARY 썸네일 프로젝트가 있습니다.', 409);
+    }
+  }
+
+  #assertSourceFrameUsable(project: ThumbnailProject): void {
+    if (project.baseImage?.sourceFrame?.rightsReviewStatus === 'rejected') {
+      throw new ThumbnailRepositoryError('SOURCE_FRAME_REJECTED', '거부된 소스 프레임은 사용할 수 없습니다.', 409);
     }
   }
 }

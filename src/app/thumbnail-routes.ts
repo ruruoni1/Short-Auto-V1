@@ -16,6 +16,7 @@ const binaryInput = z.object({
 }).strict();
 const sourceFrameProjectInput = z.strictObject({
   sourceFrameId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/),
+  contentId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/).nullable().optional(),
   templateId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/).optional(),
   name: z.string().min(1).max(80).optional(),
   channelProfile: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/).optional(),
@@ -32,13 +33,27 @@ function decode(value: string): Buffer {
 }
 export async function routeThumbnails(repo: ThumbnailRepository, req: IncomingMessage, res: ServerResponse,
   path: string, method: string, body: ReadBody, json: SendJson, fonts: FontRegistry,
-  sourceFrames?: Pick<SourceFrameService, 'getFrameImage'>): Promise<boolean> {
+  sourceFrames?: Pick<SourceFrameService, 'getFrameImage'>,
+  contentPlans?: { getContentPlan(contentId: string): unknown }): Promise<boolean> {
+  const assertContentPlan = (contentId: string | null | undefined) => {
+    if (!contentId) return;
+    if (!contentPlans) throw new ThumbnailRepositoryError('CONTENT_PLAN_SERVICE_UNAVAILABLE', '콘텐츠 계획 저장소를 사용할 수 없습니다.', 503);
+    contentPlans.getContentPlan(contentId);
+  };
+  const warningsForProject = (project: ReturnType<ThumbnailRepository['getProject']>) => {
+    const frame = project.baseImage?.sourceFrame;
+    return frame?.rightsReviewStatus === 'unchecked' ? [{
+      code: 'SOURCE_FRAME_UNCHECKED',
+      message: '소스 프레임 권리 검수가 완료되지 않았습니다. 최종 렌더는 차단됩니다.',
+    }] : [];
+  };
   if (fonts.serve(path, method, res)) return true;
   if (method === 'GET' && path === '/api/thumbnail-templates') { json(res,200,{data:repo.listTemplates()}); return true; }
   if (method === 'GET' && path === '/api/font-registry') { json(res,200,{data:fonts.listFonts()}); return true; }
   if (method === 'POST' && path === '/api/thumbnail-projects/from-source-frame') {
     if (!sourceFrames) throw new ThumbnailRepositoryError('SOURCE_FRAME_SERVICE_UNAVAILABLE', '소스 프레임 서비스를 사용할 수 없습니다.', 503);
     const input = sourceFrameProjectInput.parse(await body(req));
+    assertContentPlan(input.contentId);
     const verified = sourceFrames.getFrameImage(input.sourceFrameId);
     const frame = verified.frame;
     if (!frame.workTitle) {
@@ -49,6 +64,7 @@ export async function routeThumbnails(repo: ThumbnailRepository, req: IncomingMe
       name: input.name ?? `${frame.workTitle.slice(0, 74)} 썸네일`,
       templateId,
       channelProfile: input.channelProfile ?? 'nihon_zupzup',
+      contentId: input.contentId ?? null,
       variantOfProjectId: null,
     }, {
       reference: {
@@ -68,11 +84,21 @@ export async function routeThumbnails(repo: ThumbnailRepository, req: IncomingMe
       byteLength: frame.byteLength,
       sha256: frame.sha256,
     });
-    json(res, 201, { data: project }); return true;
+    const warnings = frame.rightsReviewStatus === 'unchecked' ? [{
+      code: 'SOURCE_FRAME_UNCHECKED',
+      message: '소스 프레임 권리 검수가 완료되지 않았습니다. 최종 렌더는 차단됩니다.',
+      sourceFrameId: frame.id,
+    }] : [];
+    json(res, 201, { data: project, meta: { warnings } }); return true;
   }
   if (path === '/api/thumbnail-projects') {
     if (method === 'GET') { json(res,200,{data:repo.listProjects()}); return true; }
-    if (method === 'POST') { json(res,201,{data:repo.createProject(await body(req))}); return true; }
+    if (method === 'POST') {
+      const input = await body(req);
+      const parsed = z.object({ contentId: z.string().nullable().optional() }).passthrough().parse(input);
+      assertContentPlan(parsed.contentId);
+      json(res,201,{data:repo.createProject(input)}); return true;
+    }
   }
   const variant = path.match(/^\/api\/thumbnail-projects\/([^/]+)\/variants$/);
   if (variant && method === 'POST') {
@@ -83,12 +109,21 @@ export async function routeThumbnails(repo: ThumbnailRepository, req: IncomingMe
   if (!match) return false;
   const id = match[1]!;
   if (!match[2]) {
-    if (method === 'GET') { json(res,200,{data:repo.getProject(id)}); return true; }
-    if (method === 'PATCH') { json(res,200,{data:repo.updateProject(id,await body(req))}); return true; }
+    if (method === 'GET') {
+      const project = repo.getProject(id);
+      json(res,200,{data:project, meta:{warnings:warningsForProject(project)}}); return true;
+    }
+    if (method === 'PATCH') {
+      const project = repo.updateProject(id,await body(req));
+      json(res,200,{data:project, meta:{warnings:warningsForProject(project)}}); return true;
+    }
     if (method === 'DELETE') { repo.deleteProject(id,await body(req)); json(res,200,{data:{deleted:true}}); return true; }
   }
   if (match[3] && method === 'GET') {
+    const project = repo.getProject(id);
+    const warnings = warningsForProject(project);
     const file = match[2] === 'assets' ? repo.getAsset(id,match[3]) : repo.getExport(id,match[3]);
+    if (warnings.length) res.setHeader('X-Source-Frame-Warning', warnings[0]!.code);
     res.writeHead(200,{'Content-Type':file.mimeType,'Cache-Control':'no-store'}); res.end(file.bytes); return true;
   }
   if (match[2] && !match[3] && method === 'POST') {

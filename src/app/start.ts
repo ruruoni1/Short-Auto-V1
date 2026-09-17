@@ -15,6 +15,8 @@ import { createVoicevoxRoute } from './voicevox/routes.js';
 import { SourceFrameRepository } from './source-frames/repository.js';
 import { SourceFrameService } from './source-frames/service.js';
 import { createSourceFrameRoute } from './source-frames/routes.js';
+import { ContentPlanRepository } from './content-plans/repository.js';
+import { createContentPlanRoute } from './content-plans/routes.js';
 
 loadActiveDocuments();
 mkdirSync(APP_PATHS.data, { recursive: true });
@@ -24,15 +26,17 @@ const fonts = new FontRegistry(APP_PATHS.projectRoot);
 const thumbnails = new ThumbnailRepository(APP_PATHS.projectRoot, fonts.listFonts());
 const sourceFrames = new SourceFrameRepository(join(APP_PATHS.data, 'source-frames.sqlite'), repository);
 const sourceFrameService = new SourceFrameService({ projectRoot: APP_PATHS.projectRoot, clips: repository, frames: sourceFrames });
+const contentPlans = new ContentPlanRepository(APP_PATHS.projectRoot, { clips: repository, frames: sourceFrames });
 const voicevox = new VoicevoxService(
   new VoicevoxClient(process.env.VOICEVOX_ENDPOINT ? { endpoint: process.env.VOICEVOX_ENDPOINT } : {}),
   new VoicevoxRepository(APP_PATHS.projectRoot),
 );
 const server = createAppServer({ repository, root: APP_PATHS.projectRoot, youtube,
   thumbnailRoute: (req, res, path, method, body, json) =>
-    routeThumbnails(thumbnails, req, res, path, method, body, json, fonts, sourceFrameService),
+    routeThumbnails(thumbnails, req, res, path, method, body, json, fonts, sourceFrameService, contentPlans),
   voicevoxRoute: createVoicevoxRoute(voicevox),
   sourceFrameRoute: createSourceFrameRoute(sourceFrameService),
+  contentPlanRoute: createContentPlanRoute(contentPlans, thumbnails),
 });
 const port = Number(process.env.SHORT_AUTO_PORT ?? 4310);
 if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid SHORT_AUTO_PORT');

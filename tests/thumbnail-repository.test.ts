@@ -239,6 +239,9 @@ test('official frame uploads require complete source and rights metadata', (t) =
     },
   });
   assert.equal(result.project.baseImage!.sourceFrame!.rightsReviewStatus, 'unchecked');
+  expectError(() => repository.storeExport(project.id, {
+    expectedRevision: 1, format: 'png', bytes: png(1280, 720),
+  }), 'SOURCE_FRAME_REVIEW_REQUIRED', 409);
   const second = create(repository, 'training_long_v1');
   expectError(() => repository.uploadBaseImage(second.id, {
     expectedRevision: 0,
@@ -249,6 +252,27 @@ test('official frame uploads require complete source and rights metadata', (t) =
       workTitle: '작품명', episode: null, sourceUrl: 'https://www.youtube.com/watch?v=XXXXXXXXXXX', rightsReviewStatus: 'unchecked',
     },
   }), 'INVALID_INPUT');
+
+  const reviewed = create(repository);
+  const reviewedUpload = repository.uploadBaseImage(reviewed.id, {
+    expectedRevision: 0, sourceType: 'OFFICIAL_CLIP_FRAME', bytes: png(640, 360),
+    sourceFrame: {
+      sourceClipId: 'clip-1', youtubeVideoId: 'abcdefghijk', sourceChannelId: 'channel-1', frameTimestampMs: 12_340,
+      workTitle: '작품명', episode: null, sourceUrl: 'https://www.youtube.com/watch?v=abcdefghijk', rightsReviewStatus: 'reviewed',
+    },
+  });
+  assert.equal(repository.storeExport(reviewed.id, {
+    expectedRevision: reviewedUpload.project.revision, format: 'png', bytes: png(1280, 720),
+  }).project.exports.length, 1);
+
+  const rejected = create(repository);
+  expectError(() => repository.uploadBaseImage(rejected.id, {
+    expectedRevision: 0, sourceType: 'OFFICIAL_CLIP_FRAME', bytes: png(640, 360),
+    sourceFrame: {
+      sourceClipId: 'clip-1', youtubeVideoId: 'abcdefghijk', sourceChannelId: 'channel-1', frameTimestampMs: 12_340,
+      workTitle: '작품명', episode: null, sourceUrl: 'https://www.youtube.com/watch?v=abcdefghijk', rightsReviewStatus: 'rejected',
+    },
+  }), 'SOURCE_FRAME_REJECTED', 409);
 });
 
 test('exports require matching PNG/JPEG bytes and exact canvas dimensions', (t) => {

@@ -124,3 +124,9 @@ npm run app
 
 실제 엔진이 실행되지 않아도 `npx tsx --test tests/voicevox.test.ts`로 endpoint 제한, 동적 화자 identity, 오류 보존, WAV/manifest 계약을 모킹 검증할 수 있습니다. 실제 VOICEVOX 청취와 최종 음질 확인은 UI 연결 후 별도로 수행합니다.
 
+## ContentPlan 및 썸네일 관계
+
+ContentPlan은 `contentId`, `contentType`, `title`, `status`, `createdAt`, `updatedAt`를 필수로 저장하며 hook·source·published 필드는 선택 사항입니다. 썸네일 참조는 ContentPlan에 역방향 ID를 저장하지 않고 ThumbnailProject의 `contentId`로 관리합니다. 콘텐츠마다 PRIMARY 썸네일 프로젝트 하나와 여러 VARIANT를 둘 수 있고, VARIANT는 PRIMARY의 `variantOfProjectId`를 가리킵니다.
+
+SourceFrame이 `unchecked`이면 썸네일 생성·편집·미리보기는 경고와 함께 허용됩니다. 최종 export와 ContentPlan의 `READY`/`PUBLISHED` 전환은 `reviewed` 프레임만 허용하고, `rejected` 프레임은 차단합니다.
+

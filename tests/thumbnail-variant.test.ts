@@ -107,7 +107,7 @@ test('each request creates a separate lineage-preserving variant, including proj
   assert.equal(first.baseImage, null);
   assert.deepEqual(first.layers, source.layers);
   const nested = repo.createVariant(first.id, { name: '두 번째 계보' });
-  assert.equal(nested.variantOfProjectId, first.id);
+  assert.equal(nested.variantOfProjectId, source.id);
   expectError(() => repo.createProject({
     name: '우회 변형', templateId: source.templateId, variantOfProjectId: source.id,
   }), 'VARIANT_ENDPOINT_REQUIRED');

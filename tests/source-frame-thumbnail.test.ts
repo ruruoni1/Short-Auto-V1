@@ -108,8 +108,10 @@ test('creates independent PNG and JPEG thumbnail projects with complete source i
     sourceFrameId: pngSource.frame.id,
   });
   assert.equal(firstResponse.status, 201);
-  const first = (await firstResponse.json()).data;
+  const firstPayload = await firstResponse.json();
+  const first = firstPayload.data;
   assert.equal(first.revision, 0);
+  assert.equal(firstPayload.meta.warnings[0].code, 'SOURCE_FRAME_UNCHECKED');
   assert.equal(first.templateId, 'shorts_discovery_v1');
   assert.equal(first.baseImage.sourceType, 'OFFICIAL_CLIP_FRAME');
   assert.equal(first.baseImage.width, 720);
@@ -128,6 +130,12 @@ test('creates independent PNG and JPEG thumbnail projects with complete source i
   });
   const copiedPng = readFileSync(join(state.root, ...first.baseImage.path.split('/')));
   assert.deepEqual(copiedPng, pngBytes);
+
+  const blockedExport = await state.request(`/api/thumbnail-projects/${first.id}/exports`, {
+    expectedRevision: 0, format: 'png', dataBase64: png(1080, 1920).toString('base64'),
+  });
+  assert.equal(blockedExport.status, 409);
+  assert.equal((await blockedExport.json()).error.code, 'SOURCE_FRAME_REVIEW_REQUIRED');
 
   const duplicateResponse = await state.request('/api/thumbnail-projects/from-source-frame', {
     sourceFrameId: pngSource.frame.id,

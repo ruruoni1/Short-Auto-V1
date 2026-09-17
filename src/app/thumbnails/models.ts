@@ -123,6 +123,7 @@ export const ThumbnailExportSchema = z.strictObject({
 export const ThumbnailProjectSchema = z.strictObject({
   schemaVersion: z.literal(1),
   id,
+  contentId: id.nullable().default(null),
   channelProfile: id,
   templateId: id,
   name: z.string().min(1).max(80),
@@ -199,6 +200,7 @@ export const FontRegistryEntrySchema = z.strictObject({
 export const CreateThumbnailProjectInputSchema = z.strictObject({
   name: z.string().min(1).max(80),
   templateId: id,
+  contentId: id.nullable().optional().default(null),
   channelProfile: id.optional().default('nihon_zupzup'),
   variantOfProjectId: id.nullable().optional().default(null),
 });
