@@ -127,3 +127,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `08_ReviewEditor_v2`: Studio에서 ContentPlan 목록 조회·선택과 최소 생성 폼을 제공한다. 선택한 `contentId`를 SourceFrame 기반 ThumbnailProject 생성 요청에 전달하고, 연결된 PRIMARY/VARIANT 목록과 `unchecked` 검수 경고를 표시한다.
 - 기존 A/B 변형·SourceFrame 요청 잠금, 늦은 응답 보호, 오류 시 입력 보존, 반응형 레이아웃을 유지했다.
 - 검증: `node --check src/app/web/studio.js`, `npm run typecheck`, `npm run build`, `npm test` 418/418, `git diff --check` 통과. 로컬 `/studio`에서 ContentPlan 선택/생성 UI와 경고 영역을 확인했다. 실제 SourceFrame 생성과 외부 게시 호출은 사용자 미디어·서비스 환경 검증 대상이다.
+
+## 2026-09-18 실제 엔진 검증
+
+- FFmpeg/FFprobe PATH 실행 확인: FFmpeg 8.1.1, FFprobe 8.1.1.
+- 합성 fixture를 생성한 뒤 `npm run render:fixture`와 `npm run render:portrait`를 실행해 가로 1280x720·세로 720x1280 MP4를 실제 인코딩했다. `npm run render:verify`에서 두 파일 모두 390 frames, H.264/AAC, 48 kHz, full decode `PASS`와 프레임 추출·오디오 RMS 검증을 확인했다.
+- VOICEVOX 실제 엔진은 `127.0.0.1:50021/version` 및 `/speakers` 요청이 모두 connection refused였다. 실행 중인 VOICEVOX 프로세스와 PATH 명령도 확인되지 않아 동적 화자 목록·audio_query·synthesis·청취 품질은 아직 검증할 수 없다.
