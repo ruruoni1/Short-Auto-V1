@@ -318,3 +318,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 기존 Host/Origin/JSON 요청 검증 경계를 유지하고 파일·렌더·TTS·게시를 실행하지 않는다. malformed JSON과 adapter 실패도 안정된 오류 envelope로 반환한다.
 - 검증: AutoPlanner/Preview API 4개, 전체 `npm test` 462/462, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
 - 다음 자동 단위는 Review Editor에서 이 Preview API를 호출하고 결과를 실제 Preview 준비 상태로 표시하는 UI 연계다. VoiceBox/VOICEVOX는 계속 제외한다.
+
+## 2026-09-20 Review Editor Preview 입력 UI 연계 완료
+
+- `/planner`에 기본 TimelineInput JSON 입력과 `Preview 입력 준비` 버튼을 추가했다. 검토 완료 handoff가 있는 경우에만 `/api/auto-planner/preview-input`을 호출하고, 반환된 Preview 입력과 diagnostics를 읽기 전용 JSON 영역에 표시한다.
+- 새 계획 생성·실패 시 Preview 준비 결과를 초기화하고, 렌더·게시·TTS 실행은 수행하지 않는다. 기존 검토 완료 JSON 복사 흐름과 오류 안내를 보존했다.
+- 검증: `node --check src/app/web/planner.js`, 전체 `npm test` 462/462, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
+- 다음 자동 단위는 실제 Preview renderer 호출 전 입력·Asset readiness를 통합 검증하는 단계이며, VoiceBox/VOICEVOX는 계속 제외한다.

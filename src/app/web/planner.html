@@ -25,6 +25,7 @@
           <div class="card-heading"><div><h2>입력</h2><p>SourceTimeline JSON을 붙여 넣으세요.</p></div><button id="load-sample" class="button button-secondary" type="button">예시 불러오기</button></div>
           <label class="field"><span>SourceTimeline</span><textarea id="source-json" rows="18" spellcheck="false" required></textarea><small>durationMs와 captions 배열이 필요합니다.</small></label>
           <label class="field"><span>기존 잠금 Scene (선택)</span><textarea id="existing-json" rows="8" spellcheck="false" placeholder="[]"></textarea><small>잠금 장면은 계획 결과에서 보존됩니다.</small></label>
+          <label class="field"><span>기본 TimelineInput JSON</span><textarea id="timeline-input-json" rows="12" spellcheck="false" placeholder='{"production": {…}, "source": {…}, "overrides": {…}}'></textarea><small>검토 완료 장면을 적용할 기존 TimelineInput을 붙여 넣으세요. 렌더·게시·TTS는 실행하지 않습니다.</small></label>
           <button class="button button-primary" type="submit">장면 계획 생성</button>
           <p id="planner-alert" class="alert" role="alert" aria-live="assertive" hidden></p>
         </form>
@@ -33,10 +34,16 @@
           <div class="card-heading"><div><h2 id="result-title">검토 결과</h2><p id="result-summary">아직 계획을 생성하지 않았습니다.</p></div></div>
           <div class="review-handoff">
             <p id="review-status" class="review-status" role="status" aria-live="polite">검토 완료 계획을 만들려면 오류 없이 장면을 생성하세요.</p>
-            <button id="copy-reviewed-plan" class="button button-secondary" type="button" disabled>검토 완료 계획 JSON 복사</button>
+            <div class="review-actions"><button id="copy-reviewed-plan" class="button button-secondary" type="button" disabled>검토 완료 계획 JSON 복사</button><button id="prepare-preview-input" class="button button-secondary" type="button" disabled>Preview 입력 준비</button></div>
           </div>
           <div id="diagnostics" class="diagnostics" aria-live="polite"></div>
           <div class="table-wrap"><table><thead><tr><th>ID</th><th>유형</th><th>시간</th><th>내용</th><th>신뢰도</th><th>상태</th></tr></thead><tbody id="scene-rows"><tr><td colspan="6" class="empty">계획 생성 후 장면이 표시됩니다.</td></tr></tbody></table></div>
+          <section id="preview-result" class="preview-result" aria-labelledby="preview-result-title" hidden>
+            <h3 id="preview-result-title">Preview 입력 준비 결과</h3>
+            <p id="preview-result-summary" class="review-status"></p>
+            <h4>입력</h4><pre id="preview-input-output" tabindex="0"></pre>
+            <h4>진단</h4><pre id="preview-diagnostics-output" tabindex="0"></pre>
+          </section>
         </section>
       </section>
     </main>

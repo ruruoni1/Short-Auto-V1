@@ -1,5 +1,6 @@
 const sourceInput = document.querySelector('#source-json');
 const existingInput = document.querySelector('#existing-json');
+const timelineInput = document.querySelector('#timeline-input-json');
 const form = document.querySelector('#planner-form');
 const alertBox = document.querySelector('#planner-alert');
 const summary = document.querySelector('#result-summary');
@@ -7,7 +8,13 @@ const diagnostics = document.querySelector('#diagnostics');
 const rows = document.querySelector('#scene-rows');
 const reviewStatus = document.querySelector('#review-status');
 const copyReviewedPlan = document.querySelector('#copy-reviewed-plan');
+const preparePreviewInput = document.querySelector('#prepare-preview-input');
+const previewResult = document.querySelector('#preview-result');
+const previewResultSummary = document.querySelector('#preview-result-summary');
+const previewInputOutput = document.querySelector('#preview-input-output');
+const previewDiagnosticsOutput = document.querySelector('#preview-diagnostics-output');
 let reviewableResult = null;
+let reviewedHandoff = null;
 
 const sample = {
   durationMs: 12000,
@@ -26,8 +33,18 @@ function setAlert(message = '') {
 
 function resetReviewHandoff() {
   reviewableResult = null;
+  reviewedHandoff = null;
   copyReviewedPlan.disabled = true;
+  preparePreviewInput.disabled = true;
   reviewStatus.textContent = '검토 완료 계획을 만들려면 오류 없이 장면을 생성하세요.';
+  resetPreviewResult();
+}
+
+function resetPreviewResult() {
+  previewResult.hidden = true;
+  previewResultSummary.textContent = '';
+  previewInputOutput.textContent = '';
+  previewDiagnosticsOutput.textContent = '';
 }
 
 function setReviewableResult(result) {
@@ -103,6 +120,28 @@ async function requestPlan(source, existingScenes) {
   return payload.data;
 }
 
+async function requestPreviewInput(input, handoff) {
+  const response = await fetch('/api/auto-planner/preview-input', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ input, handoff }),
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const error = new Error(payload?.error?.message || 'Preview 입력 준비에 실패했습니다.');
+    error.diagnostics = payload?.error?.diagnostics || [];
+    throw error;
+  }
+  return payload.data;
+}
+
+function showPreviewResult(input, items = [], message) {
+  previewResult.hidden = false;
+  previewResultSummary.textContent = message;
+  previewInputOutput.textContent = JSON.stringify(input, null, 2);
+  previewDiagnosticsOutput.textContent = JSON.stringify(items, null, 2);
+}
+
 document.querySelector('#load-sample').addEventListener('click', () => {
   sourceInput.value = JSON.stringify(sample, null, 2);
   existingInput.value = '[]';
@@ -126,10 +165,36 @@ copyReviewedPlan.addEventListener('click', async () => {
   };
   try {
     await navigator.clipboard.writeText(JSON.stringify(handoff, null, 2));
+    reviewedHandoff = handoff;
+    preparePreviewInput.disabled = false;
     reviewStatus.textContent = `검토 완료 · ${handoff.reviewedAt}`;
     setAlert();
   } catch {
     setAlert('검토 완료 계획을 클립보드에 복사하지 못했습니다. 브라우저 권한을 확인하세요.');
+  }
+});
+
+preparePreviewInput.addEventListener('click', async () => {
+  if (!reviewedHandoff) {
+    setAlert('검토 완료 계획 JSON을 먼저 복사해 검토를 완료하세요.');
+    return;
+  }
+  try {
+    const input = JSON.parse(timelineInput.value);
+    preparePreviewInput.disabled = true;
+    previewResult.hidden = false;
+    previewResultSummary.textContent = 'Preview 입력을 준비하는 중입니다.';
+    previewInputOutput.textContent = '';
+    previewDiagnosticsOutput.textContent = '';
+    const result = await requestPreviewInput(input, reviewedHandoff);
+    showPreviewResult(result.input, result.diagnostics, 'Preview 입력이 준비되었습니다. 이 화면에서는 렌더를 실행하지 않습니다.');
+    setAlert();
+  } catch (error) {
+    const message = error instanceof SyntaxError ? '기본 TimelineInput JSON 형식을 확인하세요.' : error.message;
+    showPreviewResult(null, error.diagnostics || [], 'Preview 입력을 준비하지 못했습니다.');
+    setAlert(message);
+  } finally {
+    preparePreviewInput.disabled = !reviewedHandoff;
   }
 });
 
