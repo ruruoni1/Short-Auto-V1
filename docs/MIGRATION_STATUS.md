@@ -303,3 +303,11 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 브라우저 클립보드 API가 없거나 권한이 거부되면 안내를 표시하고, 서버·Core·ContentPlan·Thumbnail Studio·TTS 경로는 변경하지 않았다. 이 handoff는 Preview·렌더·게시를 자동 승인하지 않는 읽기 전용 경계다.
 - 검증: `node --check src/app/web/planner.js`, 전체 `npm test` 453/453, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
 - 다음 단위는 `reviewed` handoff를 Preview 입력으로 소비하는 통합 경계이며, VoiceBox/VOICEVOX는 계속 제외한다.
+
+## 2026-09-20 Reviewed Scene Plan Preview 어댑터 완료
+
+- `applyReviewedScenePlan(input, handoff)`를 추가해 Review Editor의 version 1 handoff를 기존 TimelineInput의 `production.scenes`에 적용한다. 기존 source·assets·overrides·project status/revision은 보존하며 입력과 handoff를 변경하지 않는다.
+- handoff schema, 오류 진단, 빈 Scene, Source Caption ID 범위, Scene 중복·겹침, 기존 Timeline/override 참조를 모두 검증한다. 실패 시 partial Preview 입력을 반환하지 않고 구조화 진단만 반환한다.
+- 이 어댑터는 Preview 입력 변환만 수행하며 승인·최종 렌더·게시·TTS 실행을 수행하지 않는다. VoiceBox/VOICEVOX는 계속 제외한다.
+- 검증: adapter 7/7, 전체 `npm test` 460/460, `npm run typecheck`, `npm run build`, 공개 export import, `git diff --check` 통과.
+- 다음 자동 단위는 이 Preview 입력을 Review Editor 화면에서 실제 미리보기 호출로 연결하는 작업이다.

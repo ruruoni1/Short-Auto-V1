@@ -7,3 +7,4 @@ export * from './scene.js';
 export * from './asset.js';
 export * from './theme-motion.js';
 export * from './auto-planner.js';
+export * from './scene-plan-adapter.js';
