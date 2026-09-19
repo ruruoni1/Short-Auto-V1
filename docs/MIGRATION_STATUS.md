@@ -269,3 +269,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 회귀 테스트를 추가해 `default → omnivoice` 매핑을 고정했다. 전체 `npm test` 447/447, `npm run typecheck`, `npm run build`, `node --check src/app/web/app.js`, `git diff --check`를 통과했다.
 - 실행 중인 VoiceStudio backend에 대해 Short-auto `POST /api/tts/providers/voicestudio/synthesize`로 일본어 문장을 전송했다. 응답은 HTTP 200, `Content-Type: audio/wav`, `X-TTS-Engine: omnivoice`, 255,404 bytes였다.
 - 통합 WAV는 FFprobe에서 `pcm_s16le`, 24kHz, mono, 5.32초로 확인했고 FFmpeg decode 검사도 오류 없이 통과했다. 이제 UI에서 KittenTTS(영어)와 OmniVoice(다국어·일본어)를 각각 선택할 수 있다.
+
+## 2026-09-20 VoiceStudio 미리듣기 언어 선택 완료
+
+- VoiceStudio 미리듣기 UI에 언어 선택(`자동 감지`, `한국어`, `일본어`, `영어`)을 추가했다. `자동 감지`는 기존 요청 계약을 유지하고, 명시 언어는 TTS API의 `language` 필드로 전달한다.
+- OmniVoice 선택 시 일본어를 명시한 Short-auto 요청이 HTTP 200과 `X-TTS-Engine: omnivoice`를 반환했다. 응답 WAV는 253,484 bytes, 24kHz mono PCM, 5.28초였고 FFmpeg decode 검사를 통과했다.
+- UI HTML의 `voicestudio-language` 요소와 API 경로를 실제 로컬 서버에서 확인했다. 전체 `npm test` 447/447, `npm run typecheck`, `npm run build`, `node --check src/app/web/app.js`, `git diff --check`가 통과했다.

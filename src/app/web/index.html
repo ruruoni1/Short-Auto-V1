@@ -208,6 +208,7 @@
             <div class="form-grid voicevox-form-grid">
               <label class="field"><span>엔진</span><select id="voicestudio-model" disabled><option value="kittentts">KittenTTS · 영어 CPU 음성</option><option value="omnivoice">OmniVoice · 다국어 GPU 음성</option></select><small>OmniVoice는 첫 사용 전에 모델 로딩 시간이 필요할 수 있습니다.</small></label>
               <label class="field"><span>음성</span><select id="voicestudio-voice" disabled><option value="">backend 연결 후 선택</option></select></label>
+              <label class="field"><span>언어</span><select id="voicestudio-language" disabled><option value="auto">자동 감지</option><option value="ko">한국어</option><option value="ja">일본어</option><option value="en">영어</option></select><small>OmniVoice에서는 선택한 언어를 합성 요청에 명시합니다.</small></label>
               <label class="field field-wide"><span>읽을 문장</span><textarea id="voicestudio-text" rows="4">This is a local VoiceStudio preview.</textarea></label>
             </div>
             <div class="voicevox-card-actions voicevox-action-row"><button id="voicestudio-preview" class="button button-primary" type="button" disabled>VoiceStudio 미리듣기</button></div>

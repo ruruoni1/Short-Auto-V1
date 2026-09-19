@@ -6,7 +6,7 @@ const state = {
   channelJobs: new Map(),
   lastDetailTrigger: null,
   voicevox: { voices: [], selectedSpeakerUuid: '', selectedStyleId: '', profile: null, audioUrl: null, busy: false },
-  voicestudio: { installed: false, busy: false, running: false, providerReady: false, model: 'kittentts', voices: [], selectedVoiceId: '', audioUrl: null },
+  voicestudio: { installed: false, busy: false, running: false, providerReady: false, model: 'kittentts', language: 'auto', voices: [], selectedVoiceId: '', audioUrl: null },
 };
 
 const ui = {
@@ -45,7 +45,7 @@ const ui = {
     title: document.querySelector('#voicestudio-install-title-text'), copy: document.querySelector('#voicestudio-install-copy'),
     install: document.querySelector('#voicestudio-install'), start: document.querySelector('#voicestudio-start'), help: document.querySelector('#voicestudio-install-help'),
     providerStatus: document.querySelector('#voicestudio-provider-status'), providerDot: document.querySelector('#voicestudio-provider-dot'), providerTitle: document.querySelector('#voicestudio-provider-title'), providerCopy: document.querySelector('#voicestudio-provider-copy'),
-    model: document.querySelector('#voicestudio-model'), voice: document.querySelector('#voicestudio-voice'), text: document.querySelector('#voicestudio-text'), preview: document.querySelector('#voicestudio-preview'), audio: document.querySelector('#voicestudio-audio'), result: document.querySelector('#voicestudio-result'),
+    model: document.querySelector('#voicestudio-model'), voice: document.querySelector('#voicestudio-voice'), language: document.querySelector('#voicestudio-language'), text: document.querySelector('#voicestudio-text'), preview: document.querySelector('#voicestudio-preview'), audio: document.querySelector('#voicestudio-audio'), result: document.querySelector('#voicestudio-result'),
   },
 };
 
@@ -912,6 +912,7 @@ function renderVoiceStudioWorkspace() {
   const voices = voiceStudioModelVoices();
   const selected = state.voicestudio.selectedVoiceId;
   ui.voicestudio.model.value = state.voicestudio.model;
+  ui.voicestudio.language.value = state.voicestudio.language;
   ui.voicestudio.voice.replaceChildren(element('option', '', voices.length ? '음성을 선택하세요' : '사용 가능한 음성이 없습니다'));
   ui.voicestudio.voice.firstChild.value = '';
   voices.forEach((voice) => {
@@ -923,6 +924,7 @@ function renderVoiceStudioWorkspace() {
   const ready = state.voicestudio.providerReady;
   ui.voicestudio.model.disabled = !ready || state.voicestudio.busy;
   ui.voicestudio.voice.disabled = !ready || !voices.length || state.voicestudio.busy;
+  ui.voicestudio.language.disabled = !ready || state.voicestudio.busy;
   ui.voicestudio.preview.disabled = !ready || !selected || !ui.voicestudio.text.value.trim() || state.voicestudio.busy;
   ui.voicestudio.preview.textContent = state.voicestudio.busy ? '음성 생성 중…' : 'VoiceStudio 미리듣기';
 }
@@ -1027,6 +1029,7 @@ async function previewVoiceStudio() {
     const url = await voicevoxAudio('/api/tts/providers/voicestudio/synthesize', {
       text,
       voiceId: state.voicestudio.selectedVoiceId,
+      ...(state.voicestudio.language === 'auto' ? {} : { language: state.voicestudio.language }),
       providerOptions: { model: state.voicestudio.model },
     });
     if (state.voicestudio.audioUrl) URL.revokeObjectURL(state.voicestudio.audioUrl);
@@ -1096,6 +1099,7 @@ function bindEvents() {
   ui.voicestudio.start.addEventListener('click', startVoiceStudio);
   ui.voicestudio.model.addEventListener('change', () => { state.voicestudio.model = ui.voicestudio.model.value; state.voicestudio.selectedVoiceId = ''; renderVoiceStudioWorkspace(); });
   ui.voicestudio.voice.addEventListener('change', () => { state.voicestudio.selectedVoiceId = ui.voicestudio.voice.value; renderVoiceStudioWorkspace(); });
+  ui.voicestudio.language.addEventListener('change', () => { state.voicestudio.language = ui.voicestudio.language.value; renderVoiceStudioWorkspace(); });
   ui.voicestudio.text.addEventListener('input', renderVoiceStudioWorkspace);
   ui.voicestudio.preview.addEventListener('click', previewVoiceStudio);
   ui.voicevox.speaker.addEventListener('change', () => { state.voicevox.selectedSpeakerUuid = ui.voicevox.speaker.value; state.voicevox.selectedStyleId = ''; renderVoicevox(); });
