@@ -6,7 +6,7 @@ const state = {
   channelJobs: new Map(),
   lastDetailTrigger: null,
   voicevox: { voices: [], selectedSpeakerUuid: '', selectedStyleId: '', profile: null, audioUrl: null, busy: false },
-  voicestudio: { installed: false, busy: false },
+  voicestudio: { installed: false, busy: false, running: false },
 };
 
 const ui = {
@@ -43,7 +43,7 @@ const ui = {
   voicestudio: {
     status: document.querySelector('#voicestudio-install-status'), dot: document.querySelector('#voicestudio-install-dot'),
     title: document.querySelector('#voicestudio-install-title-text'), copy: document.querySelector('#voicestudio-install-copy'),
-    install: document.querySelector('#voicestudio-install'), help: document.querySelector('#voicestudio-install-help'),
+    install: document.querySelector('#voicestudio-install'), start: document.querySelector('#voicestudio-start'), help: document.querySelector('#voicestudio-install-help'),
   },
 };
 
@@ -889,6 +889,8 @@ function renderVoiceStudioInstall() {
   const installed = state.voicestudio.installed;
   ui.voicestudio.install.disabled = installed || state.voicestudio.busy;
   ui.voicestudio.install.textContent = installed ? '설치됨' : state.voicestudio.busy ? '설치 중…' : 'VoiceStudio 설치';
+  ui.voicestudio.start.disabled = !installed || state.voicestudio.busy || state.voicestudio.running;
+  ui.voicestudio.start.textContent = state.voicestudio.running ? '실행 중' : 'VoiceStudio 실행';
 }
 
 function setVoiceStudioInstallStatus(kind, title, copy) {
@@ -927,6 +929,26 @@ async function installVoiceStudio() {
     showToast('VoiceStudio 설치가 완료되었습니다.');
   } catch (error) {
     setVoiceStudioInstallStatus('unavailable', 'VoiceStudio 설치 실패', errorMessage(error));
+  } finally {
+    state.voicestudio.busy = false;
+    renderVoiceStudioInstall();
+  }
+}
+
+async function startVoiceStudio() {
+  if (!state.voicestudio.installed || state.voicestudio.busy || state.voicestudio.running) return;
+  if (!window.confirm('설치된 VoiceStudio를 실행하고 backend 연결을 기다릴까요?')) return;
+  state.voicestudio.busy = true;
+  renderVoiceStudioInstall();
+  setVoiceStudioInstallStatus('loading', 'VoiceStudio 실행 중', '설치된 앱을 실행하고 backend 준비를 기다립니다.');
+  try {
+    const payload = await request('/api/tts/providers/voicestudio/start', { method: 'POST', body: { consent: true } });
+    state.voicestudio.running = payload?.data?.ownership === 'external' || payload?.data?.ownership === 'nihon-managed';
+    setVoiceStudioInstallStatus('ready', 'VoiceStudio backend 준비됨', '이제 VoiceStudio provider로 음성을 생성할 수 있습니다.');
+    ui.voicestudio.help.textContent = payload?.data?.ownership === 'external' ? '기존에 실행 중인 VoiceStudio backend에 연결했습니다.' : 'Short-auto가 시작한 VoiceStudio backend에 연결했습니다.';
+    showToast('VoiceStudio backend에 연결했습니다.');
+  } catch (error) {
+    setVoiceStudioInstallStatus('unavailable', 'VoiceStudio 실행 실패', errorMessage(error));
   } finally {
     state.voicestudio.busy = false;
     renderVoiceStudioInstall();
@@ -982,6 +1004,7 @@ function bindEvents() {
   ui.navButtons.forEach((button) => button.addEventListener('click', () => setView(button.dataset.view)));
   ui.voicevox.retry.addEventListener('click', loadVoicevox);
   ui.voicestudio.install.addEventListener('click', installVoiceStudio);
+  ui.voicestudio.start.addEventListener('click', startVoiceStudio);
   ui.voicevox.speaker.addEventListener('change', () => { state.voicevox.selectedSpeakerUuid = ui.voicevox.speaker.value; state.voicevox.selectedStyleId = ''; renderVoicevox(); });
   ui.voicevox.style.addEventListener('change', () => { state.voicevox.selectedStyleId = ui.voicevox.style.value; renderVoicevox(); });
   ui.voicevox.profileName.addEventListener('input', renderVoicevox);

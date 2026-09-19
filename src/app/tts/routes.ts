@@ -4,6 +4,7 @@ import type { AppRoute } from '../server.js';
 import { TTSProviderRegistry } from './registry.js';
 import type { VoiceStudioInstallLocation, VoiceStudioInstallManager, VoiceStudioInstallRequest, VoiceStudioInstallResult, VoiceStudioInstallLocator } from '../voicestudio/install-manager.js';
 import type { VoiceStudioInstaller, VoiceStudioRelease } from '../voicestudio/installer.js';
+import type { VoiceStudioProcessManager, VoiceStudioProcessState } from '../voicestudio/process-manager.js';
 
 const SynthesisInputSchema = z.strictObject({
   text: z.string().min(1).max(5_000),
@@ -42,6 +43,10 @@ export interface TTSRouteOptions {
     manager: Pick<VoiceStudioInstallManager, 'install'>;
     locator: VoiceStudioInstallLocator;
     targetDirectory: string;
+  };
+  voiceStudioProcess?: {
+    manager: Pick<VoiceStudioProcessManager, 'start'>;
+    locator: VoiceStudioInstallLocator;
   };
 }
 
@@ -84,6 +89,15 @@ export function createTTSRoute(registry: TTSProviderRegistry, options: TTSRouteO
           installer: { name: release.installer.name, bytes: result.installer.bytes, sha256: result.installer.sha256, downloaded: result.installer.downloaded },
           installation: installationData(result.installation),
         } }); return true;
+      }
+      if (path === '/api/tts/providers/voicestudio/start' && method === 'POST') {
+        const process = options.voiceStudioProcess;
+        if (!process) { json(res, 404, { error: { code: 'PROCESS_UNAVAILABLE', message: 'VoiceStudio 실행 관리가 구성되지 않았습니다.' } }); return true; }
+        InstallInputSchema.parse(await body(req));
+        const installation = await process.locator.find();
+        if (!installation) { json(res, 409, { error: { code: 'VOICE_STUDIO_NOT_INSTALLED', message: '먼저 VoiceStudio를 설치하세요.' } }); return true; }
+        const state: VoiceStudioProcessState = await process.manager.start({ executablePath: installation.executablePath, args: [] });
+        json(res, 200, { data: state }); return true;
       }
 
       const id = providerId(path);

@@ -24,6 +24,7 @@ import { VoiceStudioClient } from './voicestudio/client.js';
 import { VoiceStudioProvider } from './voicestudio/provider.js';
 import { VoiceStudioInstaller } from './voicestudio/installer.js';
 import { FileVoiceStudioInstallLocator, VoiceStudioInstallManager } from './voicestudio/install-manager.js';
+import { VoiceStudioProcessManager } from './voicestudio/process-manager.js';
 
 loadActiveDocuments();
 mkdirSync(APP_PATHS.data, { recursive: true });
@@ -38,25 +39,28 @@ const voicevox = new VoicevoxService(
   new VoicevoxClient(process.env.VOICEVOX_ENDPOINT ? { endpoint: process.env.VOICEVOX_ENDPOINT } : {}),
   new VoicevoxRepository(APP_PATHS.projectRoot),
 );
+const voiceStudioClient = new VoiceStudioClient(
+  process.env.VOICESTUDIO_ENDPOINT ? { endpoint: process.env.VOICESTUDIO_ENDPOINT } : {},
+);
 const ttsProviders = new TTSProviderRegistry();
 ttsProviders.register(new VoicevoxProvider(voicevox));
-ttsProviders.register(new VoiceStudioProvider(new VoiceStudioClient(
-  process.env.VOICESTUDIO_ENDPOINT ? { endpoint: process.env.VOICESTUDIO_ENDPOINT } : {},
-)));
+ttsProviders.register(new VoiceStudioProvider(voiceStudioClient));
 const voiceStudioInstaller = new VoiceStudioInstaller();
 const voiceStudioInstallLocator = new FileVoiceStudioInstallLocator();
 const voiceStudioInstallManager = new VoiceStudioInstallManager(voiceStudioInstaller, { locator: voiceStudioInstallLocator });
+const voiceStudioProcessManager = new VoiceStudioProcessManager(voiceStudioClient);
 const server = createAppServer({ repository, root: APP_PATHS.projectRoot, youtube,
   thumbnailRoute: (req, res, path, method, body, json) =>
     routeThumbnails(thumbnails, req, res, path, method, body, json, fonts, sourceFrameService, contentPlans),
   voicevoxRoute: createVoicevoxRoute(voicevox),
   ttsRoute: createTTSRoute(ttsProviders, {
-    voiceStudioInstall: {
+  voiceStudioInstall: {
       installer: voiceStudioInstaller,
       manager: voiceStudioInstallManager,
       locator: voiceStudioInstallLocator,
       targetDirectory: join(APP_PATHS.data, 'voicestudio', 'installers'),
     },
+    voiceStudioProcess: { manager: voiceStudioProcessManager, locator: voiceStudioInstallLocator },
   }),
   sourceFrameRoute: createSourceFrameRoute(sourceFrameService),
   contentPlanRoute: createContentPlanRoute(contentPlans, thumbnails),
@@ -68,6 +72,6 @@ server.listen(port, '127.0.0.1', () => {
   repository.recoverInterruptedJobs();
   console.log(`Short-auto: http://127.0.0.1:${port}`);
 });
-function stop() { server.close(() => { sourceFrames.close(); repository.close(); process.exit(0); }); }
+function stop() { void voiceStudioProcessManager.stop().finally(() => server.close(() => { sourceFrames.close(); repository.close(); process.exit(0); })); }
 process.once('SIGINT', stop);
 process.once('SIGTERM', stop);

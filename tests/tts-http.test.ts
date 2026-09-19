@@ -126,3 +126,30 @@ test('VoiceStudio installation API requires explicit consent and keeps paths ser
   assert.equal(resolveCalls, 1);
   assert.equal(installCalls, 1);
 });
+
+test('VoiceStudio start API uses only the installed executable and requires consent', async t => {
+  const registry = new TTSProviderRegistry();
+  const source = new SourceRepository(':memory:');
+  const calls: Array<{ executablePath: string; args?: readonly string[] }> = [];
+  const server = createAppServer({ repository: source, root: root(t), youtube: null, ttsRoute: createTTSRoute(registry, {
+    voiceStudioProcess: {
+      locator: { find: async () => ({ executablePath: 'C:\\Program Files\\VoiceStudio\\VoiceStudio.exe' }) },
+      manager: { start: async request => { calls.push(request); return { ownership: 'nihon-managed' as const, endpoint: 'http://127.0.0.1:3900', pid: 1234 }; } },
+    },
+  }) });
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(async () => { await new Promise<void>(resolve => server.close(() => resolve())); source.close(); });
+  const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  const request = (body: unknown) => fetch(`${base}/api/tts/providers/voicestudio/start`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
+  const denied = await request({ consent: false });
+  assert.equal(denied.status, 400);
+  assert.equal(calls.length, 0);
+  const started = await request({ consent: true, executablePath: 'C:\\unsafe.exe' });
+  assert.equal(started.status, 400);
+  assert.equal(calls.length, 0);
+  const valid = await request({ consent: true });
+  assert.equal(valid.status, 200);
+  assert.deepEqual(calls, [{ executablePath: 'C:\\Program Files\\VoiceStudio\\VoiceStudio.exe', args: [] }]);
+});

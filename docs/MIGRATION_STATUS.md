@@ -216,3 +216,11 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 설치 후 VoiceStudio를 자동 실행하지 않고 사용자가 앱을 열도록 안내한다. 설치되지 않은 상태에서도 기존 VOICEVOX 작업 화면은 계속 사용할 수 있다.
 - 검증: `node --check src/app/web/app.js`, 로컬 서버 `/` 및 설치 상태 API 200 응답, 전체 `npm test` 443/443, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
 - 공식 VoiceStudio 문서상 Electron 앱이 backend를 관리하고 실행 인자는 공개된 안정 계약으로 확인되지 않아, 임의의 executable spawn 연결은 보류한다. [공식 Windows 설치 문서](https://github.com/debpalash/VoiceStudio/blob/main/docs/install/windows.md)
+
+## 2026-09-20 VoiceStudio 실행·attach API 완료
+
+- `/api/tts/providers/voicestudio/start`를 추가했다. 설치 감지기의 실행 파일만 사용하고 빈 인자로 VoiceStudio Electron을 실행한 뒤 `/health`가 준비될 때까지 기다린다.
+- 이미 backend가 실행 중이면 spawn하지 않고 `external` 소유로 attach한다. Short-auto가 시작한 child만 종료 시 정리한다.
+- UI에 `VoiceStudio 실행` 버튼을 추가했으며 설치·실행 모두 확인 대화상자와 동의 payload가 필요하다.
+- 검증: TTS HTTP 테스트 4/4, 전체 `npm test` 444/444, `npm run typecheck`, `npm run build`, `node --check src/app/web/app.js`, `git diff --check` 통과. 실제 VoiceStudio 미설치 상태이므로 실제 실행·WAV 합성은 아직 미검증이다.
+- 다음 단위는 VoiceStudio 설치 후 실제 backend health·`/openapi.json`·voice 목록·WAV 합성을 사용자 환경에서 확인하는 것이다.
