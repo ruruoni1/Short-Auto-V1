@@ -31,6 +31,10 @@
 
         <section class="planner-card" aria-labelledby="result-title">
           <div class="card-heading"><div><h2 id="result-title">검토 결과</h2><p id="result-summary">아직 계획을 생성하지 않았습니다.</p></div></div>
+          <div class="review-handoff">
+            <p id="review-status" class="review-status" role="status" aria-live="polite">검토 완료 계획을 만들려면 오류 없이 장면을 생성하세요.</p>
+            <button id="copy-reviewed-plan" class="button button-secondary" type="button" disabled>검토 완료 계획 JSON 복사</button>
+          </div>
           <div id="diagnostics" class="diagnostics" aria-live="polite"></div>
           <div class="table-wrap"><table><thead><tr><th>ID</th><th>유형</th><th>시간</th><th>내용</th><th>신뢰도</th><th>상태</th></tr></thead><tbody id="scene-rows"><tr><td colspan="6" class="empty">계획 생성 후 장면이 표시됩니다.</td></tr></tbody></table></div>
         </section>

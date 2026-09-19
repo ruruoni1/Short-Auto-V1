@@ -5,6 +5,9 @@ const alertBox = document.querySelector('#planner-alert');
 const summary = document.querySelector('#result-summary');
 const diagnostics = document.querySelector('#diagnostics');
 const rows = document.querySelector('#scene-rows');
+const reviewStatus = document.querySelector('#review-status');
+const copyReviewedPlan = document.querySelector('#copy-reviewed-plan');
+let reviewableResult = null;
 
 const sample = {
   durationMs: 12000,
@@ -19,6 +22,26 @@ const sample = {
 function setAlert(message = '') {
   alertBox.textContent = message;
   alertBox.hidden = !message;
+}
+
+function resetReviewHandoff() {
+  reviewableResult = null;
+  copyReviewedPlan.disabled = true;
+  reviewStatus.textContent = '검토 완료 계획을 만들려면 오류 없이 장면을 생성하세요.';
+}
+
+function setReviewableResult(result) {
+  const hasErrors = result.diagnostics.some((item) => item.severity === 'error');
+  if (hasErrors || result.scenes.length === 0) {
+    resetReviewHandoff();
+    reviewStatus.textContent = hasErrors
+      ? '오류를 해결한 뒤 검토 완료 계획을 복사할 수 있습니다.'
+      : '장면이 하나 이상 있어야 검토 완료 계획을 복사할 수 있습니다.';
+    return;
+  }
+  reviewableResult = { scenes: result.scenes, diagnostics: result.diagnostics };
+  copyReviewedPlan.disabled = false;
+  reviewStatus.textContent = '검토 완료 계획을 복사할 수 있습니다.';
 }
 
 function diagnosticsView(items = []) {
@@ -86,9 +109,34 @@ document.querySelector('#load-sample').addEventListener('click', () => {
   setAlert();
 });
 
+copyReviewedPlan.addEventListener('click', async () => {
+  if (!reviewableResult) {
+    setAlert('오류 없이 장면이 하나 이상인 계획만 검토 완료로 복사할 수 있습니다.');
+    return;
+  }
+  if (!navigator.clipboard?.writeText) {
+    setAlert('이 브라우저에서는 클립보드 복사를 지원하지 않습니다.');
+    return;
+  }
+  const handoff = {
+    version: 1,
+    reviewedAt: new Date().toISOString(),
+    scenes: reviewableResult.scenes,
+    diagnostics: reviewableResult.diagnostics,
+  };
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(handoff, null, 2));
+    reviewStatus.textContent = `검토 완료 · ${handoff.reviewedAt}`;
+    setAlert();
+  } catch {
+    setAlert('검토 완료 계획을 클립보드에 복사하지 못했습니다. 브라우저 권한을 확인하세요.');
+  }
+});
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   setAlert();
+  resetReviewHandoff();
   try {
     const source = JSON.parse(sourceInput.value);
     const existingScenes = JSON.parse(existingInput.value || '[]');
@@ -99,10 +147,12 @@ form.addEventListener('submit', async (event) => {
     summary.textContent = `${result.scenes.length}개 장면 · 오류 ${errorCount}개 · 경고 ${warningCount}개`;
     diagnosticsView(result.diagnostics);
     sceneRows(result.scenes);
+    setReviewableResult(result);
   } catch (error) {
     summary.textContent = '계획을 생성하지 못했습니다.';
     diagnosticsView();
     sceneRows();
+    resetReviewHandoff();
     setAlert(error instanceof SyntaxError ? 'JSON 형식을 확인하세요.' : error.message);
   }
 });
