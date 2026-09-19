@@ -149,3 +149,11 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `src/app/voicestudio/detector.ts`에 기존 backend를 `external` 소유로 탐지하는 경로를 추가했다. 이 단계에서는 외부 프로세스를 시작하거나 종료하지 않는다.
 - 검증: VoiceStudio client/detector 테스트 4/4, 전체 `npm test` 426/426, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
 - 다음 단위는 공식 VoiceStudio 설치 경로와 Release asset 탐지이며, 자동 다운로드 전에 checksum·동의·설치 완료 감지를 설계한다.
+
+## 2026-09-20 VoiceStudio Release 탐지 기반
+
+- `src/app/voicestudio/installer.ts`에 GitHub latest stable Release에서 Windows x64 Electron installer asset을 동적으로 선택하는 resolver를 추가했다.
+- `SHA256SUMS-Windows.x64.txt` manifest에서 설치 파일의 SHA256을 찾아 반환하며, HTTPS GitHub URL·단일 installer asset·stable release 조건을 검증한다.
+- 실제 다운로드·설치·silent flag 실행은 아직 수행하지 않는다. 설치 동의, `.part` 다운로드, checksum 비교 후 실행, 설치 완료 감지는 다음 단위다.
+- 검증: installer resolver 테스트 3/3, 전체 `npm test` 429/429, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
+- 다음 단위는 사용자 동의 후 checksum 검증 다운로드와 설치 완료 감지다. VoiceStudio 바이너리는 저장소에 커밋하지 않는다.
