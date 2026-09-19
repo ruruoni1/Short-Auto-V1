@@ -65,6 +65,28 @@ function checksum(manifest: string, assetName: string): string {
   throw new VoiceStudioError('CHECKSUM_MISSING', 'VoiceStudio 설치 파일의 SHA256을 찾을 수 없습니다.', 'invalid_response', 502, false);
 }
 
+const INSTALLER_PATTERNS = [
+  /^VoiceStudio-Electron-.+-win-x64\.exe$/i,
+  /^VoiceStudio_Current_User_.+_x64_en-US\.msi$/i,
+  /^VoiceStudio_.+_x64_en-US\.msi$/i,
+] as const;
+
+function selectInstallerAsset(assets: z.infer<typeof InstallerAssetSchema>[], manifest: string) {
+  for (const pattern of INSTALLER_PATTERNS) {
+    const matches = assets.filter(asset => pattern.test(asset.name));
+    if (matches.length > 1) throw new VoiceStudioError('INSTALLER_ASSET_MISSING', 'VoiceStudio Windows 설치 파일을 하나로 확인할 수 없습니다.', 'invalid_response', 502, true);
+    const asset = matches[0];
+    if (!asset) continue;
+    try {
+      return { asset, sha256: checksum(manifest, asset.name) };
+    } catch (error) {
+      if (error instanceof VoiceStudioError && error.code === 'CHECKSUM_MISSING') continue;
+      throw error;
+    }
+  }
+  throw new VoiceStudioError('INSTALLER_ASSET_MISSING', 'checksum이 확인되는 VoiceStudio Windows 설치 파일을 찾을 수 없습니다.', 'invalid_response', 502, true);
+}
+
 export class VoiceStudioInstaller {
   readonly #fetch: typeof fetch;
   readonly #apiUrl: string;
@@ -82,23 +104,22 @@ export class VoiceStudioInstaller {
     if (!release.success || release.data.draft || release.data.prerelease) {
       throw new VoiceStudioError('RELEASE_INVALID', 'VoiceStudio stable release 응답이 올바르지 않습니다.', 'invalid_response', 502, true);
     }
-    const installerAssets = release.data.assets.filter(asset => /^VoiceStudio-Electron-.+-win-x64\.exe$/i.test(asset.name));
-    if (installerAssets.length !== 1) {
-      throw new VoiceStudioError('INSTALLER_ASSET_MISSING', 'VoiceStudio Windows Electron 설치 파일을 하나로 확인할 수 없습니다.', 'invalid_response', 502, true);
-    }
     const checksumAssets = release.data.assets.filter(asset => /^SHA256SUMS-Windows\.x64\.txt$/i.test(asset.name));
     if (checksumAssets.length !== 1) {
       throw new VoiceStudioError('CHECKSUM_ASSET_MISSING', 'VoiceStudio Windows SHA256 manifest를 찾을 수 없습니다.', 'invalid_response', 502, true);
     }
-    const installer = installerAssets[0]!;
     const checksumAsset = checksumAssets[0]!;
-    const installerUrl = githubUrl(installer.browser_download_url, 'INSTALLER_URL_INVALID');
+    for (const asset of release.data.assets) {
+      if (INSTALLER_PATTERNS.some(pattern => pattern.test(asset.name))) githubUrl(asset.browser_download_url, 'INSTALLER_URL_INVALID');
+    }
     const checksumUrl = githubUrl(checksumAsset.browser_download_url, 'CHECKSUM_URL_INVALID');
     const manifestResponse = await this.#request(checksumUrl, 'text/plain');
     const manifest = await manifestResponse.text();
+    const selected = selectInstallerAsset(release.data.assets, manifest);
+    const installerUrl = githubUrl(selected.asset.browser_download_url, 'INSTALLER_URL_INVALID');
     return {
       version: release.data.tag_name,
-      installer: { name: installer.name, url: installerUrl, sha256: checksum(manifest, installer.name) },
+      installer: { name: selected.asset.name, url: installerUrl, sha256: selected.sha256 },
       checksumManifest: { name: checksumAsset.name, url: checksumUrl },
     };
   }

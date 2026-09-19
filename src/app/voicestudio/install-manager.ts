@@ -31,7 +31,10 @@ export interface VoiceStudioInstallResult {
 
 function defaultRunInstaller(installerPath: string): Promise<{ exitCode: number }> {
   return new Promise((resolve, reject) => {
-    const child = spawn(installerPath, [], {
+    const isMsi = installerPath.toLowerCase().endsWith('.msi');
+    const executable = isMsi ? 'msiexec.exe' : installerPath;
+    const args = isMsi ? ['/i', installerPath] : [];
+    const child = spawn(executable, args, {
       shell: false,
       windowsHide: false,
       stdio: 'ignore',
@@ -43,7 +46,10 @@ function defaultRunInstaller(installerPath: string): Promise<{ exitCode: number 
 
 export function defaultVoiceStudioInstallCandidates(env: NodeJS.ProcessEnv = process.env): string[] {
   const candidates: string[] = [];
-  if (env.LOCALAPPDATA) candidates.push(path.join(env.LOCALAPPDATA, 'Programs', 'VoiceStudio', 'VoiceStudio.exe'));
+  if (env.LOCALAPPDATA) {
+    candidates.push(path.join(env.LOCALAPPDATA, 'VoiceStudio (Current User)', 'VoiceStudio.exe'));
+    candidates.push(path.join(env.LOCALAPPDATA, 'Programs', 'VoiceStudio', 'VoiceStudio.exe'));
+  }
   if (env.ProgramFiles) candidates.push(path.join(env.ProgramFiles, 'VoiceStudio', 'VoiceStudio.exe'));
   return candidates;
 }

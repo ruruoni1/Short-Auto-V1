@@ -7,6 +7,7 @@ import { VoiceStudioInstaller } from '../src/app/voicestudio/installer.js';
 import { VoiceStudioError } from '../src/app/voicestudio/models.js';
 
 const installerName = 'VoiceStudio-Electron-0.5.3-win-x64.exe';
+const currentUserMsiName = 'VoiceStudio_Current_User_0.5.3_x64_en-US.msi';
 const checksumName = 'SHA256SUMS-Windows.x64.txt';
 const sha256 = 'a'.repeat(64);
 
@@ -38,6 +39,23 @@ test('installer resolves the stable Electron Windows asset and checksum', async 
     checksumManifest: { name: checksumName, url: `https://github.com/debpalash/VoiceStudio/releases/download/v0.5.3/${checksumName}` },
   });
   assert.equal(calls.length, 2);
+});
+
+test('installer falls back to a checksum-listed current-user MSI when Electron EXE is not listed', async () => {
+  const installer = new VoiceStudioInstaller({ fetch: async (input) => {
+    const url = String(input);
+    if (url.includes('/releases/latest')) return Response.json({
+      tag_name: 'v0.5.3', draft: false, prerelease: false,
+      assets: [
+        { name: installerName, browser_download_url: `https://github.com/debpalash/VoiceStudio/releases/download/v0.5.3/${installerName}` },
+        { name: currentUserMsiName, browser_download_url: `https://github.com/debpalash/VoiceStudio/releases/download/v0.5.3/${currentUserMsiName}` },
+        { name: checksumName, browser_download_url: `https://github.com/debpalash/VoiceStudio/releases/download/v0.5.3/${checksumName}` },
+      ],
+    });
+    return new Response(`${sha256}  ${currentUserMsiName}\n`, { headers: { 'content-type': 'text/plain' } });
+  }});
+  const result = await installer.resolveLatestStable();
+  assert.equal(result.installer.name, currentUserMsiName);
 });
 
 test('installer rejects a release without an unambiguous checksum', async () => {

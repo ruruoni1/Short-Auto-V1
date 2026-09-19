@@ -224,3 +224,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - UI에 `VoiceStudio 실행` 버튼을 추가했으며 설치·실행 모두 확인 대화상자와 동의 payload가 필요하다.
 - 검증: TTS HTTP 테스트 4/4, 전체 `npm test` 444/444, `npm run typecheck`, `npm run build`, `node --check src/app/web/app.js`, `git diff --check` 통과. 실제 VoiceStudio 미설치 상태이므로 실제 실행·WAV 합성은 아직 미검증이다.
 - 다음 단위는 VoiceStudio 설치 후 실제 backend health·`/openapi.json`·voice 목록·WAV 합성을 사용자 환경에서 확인하는 것이다.
+
+## 2026-09-20 VoiceStudio Release checksum 호환 보강
+
+- 실제 공식 `v0.5.3` Release를 조회한 결과 Electron EXE는 checksum manifest에 없고 Current User MSI만 등록되어 있음을 확인했다.
+- resolver는 checksum이 검증되는 Electron EXE를 우선하고, 없으면 Current User MSI, 마지막으로 per-machine MSI를 선택한다. checksum이 없는 파일은 절대 설치 대상으로 사용하지 않는다.
+- MSI는 `msiexec.exe /i` 표시 실행으로 처리하고, Current User 설치 경로를 기본 탐지 후보에 추가했다.
+- 검증: 실제 GitHub Release resolver가 `VoiceStudio_Current_User_0.5.3_x64_en-US.msi`와 SHA256 `579005a0af35ba3004927188be040fda157b34400123dcc9c3d2c9e8f1195630`을 반환했고, 전체 `npm test` 445/445, `npm run typecheck`, `npm run build`, `git diff --check`가 통과했다.
