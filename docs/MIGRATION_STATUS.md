@@ -164,3 +164,11 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - checksum 불일치·실패 시 부분 파일을 제거하며, 이미 검증된 동일 파일은 재사용한다. installer 실행이나 외부 프로그램 설치는 이 단위에서 수행하지 않는다.
 - 검증: VoiceStudio installer 테스트 5/5, 전체 `npm test` 431/431, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
 - 다음 단위는 명시적 사용자 동의 이후 installer 실행과 설치 완료 감지이며, silent install 옵션은 upstream 확인 전 하드코딩하지 않는다.
+
+## 2026-09-20 VoiceStudio 설치 실행·완료 감지 기반
+
+- `src/app/voicestudio/install-manager.ts`에 사용자 동의 후 installer를 표시 실행하고, 설치 프로세스 종료 코드와 예상 설치 경로 탐지를 확인하는 관리자를 추가했다.
+- 기본 실행은 `shell:false`, `windowsHide:false`로 설치 UI를 표시하며, `external` backend를 종료하지 않는 다음 수명주기 단계와 분리했다. 기본 후보 경로는 사용자 LocalAppData와 Program Files이며 후보를 주입할 수 있다.
+- 설치가 성공 코드로 끝나도 설치 실행 파일이 감지되지 않으면 완료로 처리하지 않는다. silent flag는 사용하지 않는다.
+- 검증: install manager 테스트 3/3, 전체 `npm test` 434/434, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
+- 다음 단위는 설치된 VoiceStudio executable에서 backend를 안전하게 시작하고 `/health` readiness를 기다리는 process manager다.
