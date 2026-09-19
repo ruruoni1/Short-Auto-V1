@@ -26,6 +26,8 @@
           <label class="field"><span>SourceTimeline</span><textarea id="source-json" rows="18" spellcheck="false" required></textarea><small>durationMs와 captions 배열이 필요합니다.</small></label>
           <label class="field"><span>기존 잠금 Scene (선택)</span><textarea id="existing-json" rows="8" spellcheck="false" placeholder="[]"></textarea><small>잠금 장면은 계획 결과에서 보존됩니다.</small></label>
           <label class="field"><span>기본 TimelineInput JSON</span><textarea id="timeline-input-json" rows="12" spellcheck="false" placeholder='{"production": {…}, "source": {…}, "overrides": {…}}'></textarea><small>검토 완료 장면을 적용할 기존 TimelineInput을 붙여 넣으세요. 렌더·게시·TTS는 실행하지 않습니다.</small></label>
+          <label class="field"><span>ContentPlan 연결</span><select id="content-plan-select"><option value="">ContentPlan을 선택하세요</option></select><small id="content-plan-status">Preview 준비 후 제작 시작 상태를 선택할 수 있습니다.</small></label>
+          <button id="start-content-plan" class="button button-secondary" type="button" disabled>제작 시작(IN_PROGRESS)</button>
           <button class="button button-primary" type="submit">장면 계획 생성</button>
           <p id="planner-alert" class="alert" role="alert" aria-live="assertive" hidden></p>
         </form>

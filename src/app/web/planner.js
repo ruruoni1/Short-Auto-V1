@@ -1,6 +1,9 @@
 const sourceInput = document.querySelector('#source-json');
 const existingInput = document.querySelector('#existing-json');
 const timelineInput = document.querySelector('#timeline-input-json');
+const contentPlanSelect = document.querySelector('#content-plan-select');
+const contentPlanStatus = document.querySelector('#content-plan-status');
+const startContentPlan = document.querySelector('#start-content-plan');
 const form = document.querySelector('#planner-form');
 const alertBox = document.querySelector('#planner-alert');
 const summary = document.querySelector('#result-summary');
@@ -17,6 +20,8 @@ const assetReadinessOutput = document.querySelector('#asset-readiness-output');
 const assetDiagnosticsOutput = document.querySelector('#asset-diagnostics-output');
 let reviewableResult = null;
 let reviewedHandoff = null;
+let selectedContentPlan = null;
+let previewReady = false;
 
 const sample = {
   durationMs: 12000,
@@ -43,12 +48,53 @@ function resetReviewHandoff() {
 }
 
 function resetPreviewResult() {
+  previewReady = false;
   previewResult.hidden = true;
   previewResultSummary.textContent = '';
   previewInputOutput.textContent = '';
   previewDiagnosticsOutput.textContent = '';
   assetReadinessOutput.textContent = '';
   assetDiagnosticsOutput.textContent = '';
+  updateContentPlanAction();
+}
+
+function updateContentPlanAction() {
+  const canStart = Boolean(selectedContentPlan && previewReady && ['DRAFT', 'PLANNED'].includes(selectedContentPlan.status));
+  startContentPlan.disabled = !canStart;
+  if (!selectedContentPlan) contentPlanStatus.textContent = 'Preview 준비 후 제작 시작 상태를 선택할 수 있습니다.';
+  else if (!previewReady) contentPlanStatus.textContent = `${selectedContentPlan.title} · Preview 입력 준비가 필요합니다.`;
+  else if (!['DRAFT', 'PLANNED'].includes(selectedContentPlan.status)) contentPlanStatus.textContent = `${selectedContentPlan.title} · 현재 상태 ${selectedContentPlan.status}에서는 제작 시작을 실행할 수 없습니다.`;
+  else contentPlanStatus.textContent = `${selectedContentPlan.title} · 제작 시작을 실행할 수 있습니다.`;
+}
+
+async function loadContentPlans() {
+  try {
+    const response = await fetch('/api/content-plans', { headers: { Accept: 'application/json' } });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(payload?.error?.message || 'ContentPlan을 불러오지 못했습니다.');
+    contentPlanSelect.replaceChildren(new Option('ContentPlan을 선택하세요', ''));
+    for (const plan of payload?.data || []) contentPlanSelect.add(new Option(`${plan.title} · ${plan.status}`, plan.contentId));
+  } catch (error) {
+    contentPlanStatus.textContent = error.message;
+  }
+}
+
+async function loadContentPlan(contentId) {
+  selectedContentPlan = null;
+  previewReady = false;
+  if (!contentId) {
+    updateContentPlanAction();
+    return;
+  }
+  try {
+    const response = await fetch(`/api/content-plans/${encodeURIComponent(contentId)}`, { headers: { Accept: 'application/json' } });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(payload?.error?.message || 'ContentPlan을 불러오지 못했습니다.');
+    selectedContentPlan = payload?.data || null;
+  } catch (error) {
+    contentPlanStatus.textContent = error.message;
+  }
+  updateContentPlanAction();
 }
 
 function setReviewableResult(result) {
@@ -140,6 +186,7 @@ async function requestPreviewInput(input, handoff) {
 }
 
 function showPreviewResult(input, items = [], message, assets = null) {
+  previewReady = Boolean(input);
   previewResult.hidden = false;
   previewResultSummary.textContent = message;
   previewInputOutput.textContent = JSON.stringify(input, null, 2);
@@ -151,6 +198,7 @@ function showPreviewResult(input, items = [], message, assets = null) {
     renderVerification: plan?.renderVerification || 'not_available',
   }, null, 2);
   assetDiagnosticsOutput.textContent = JSON.stringify(assets?.diagnostics || [], null, 2);
+  updateContentPlanAction();
 }
 
 document.querySelector('#load-sample').addEventListener('click', () => {
@@ -211,6 +259,28 @@ preparePreviewInput.addEventListener('click', async () => {
   }
 });
 
+contentPlanSelect.addEventListener('change', () => loadContentPlan(contentPlanSelect.value));
+
+startContentPlan.addEventListener('click', async () => {
+  if (!selectedContentPlan || !previewReady) return;
+  startContentPlan.disabled = true;
+  try {
+    const response = await fetch(`/api/content-plans/${encodeURIComponent(selectedContentPlan.contentId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ status: 'IN_PROGRESS' }),
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(payload?.error?.message || 'ContentPlan 상태를 변경하지 못했습니다.');
+    selectedContentPlan = payload?.data || selectedContentPlan;
+    contentPlanStatus.textContent = `${selectedContentPlan.title} · 제작 시작됨(IN_PROGRESS)`;
+    setAlert();
+  } catch (error) {
+    setAlert(error.message);
+    updateContentPlanAction();
+  }
+});
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   setAlert();
@@ -237,3 +307,4 @@ form.addEventListener('submit', async (event) => {
 
 sourceInput.value = JSON.stringify(sample, null, 2);
 existingInput.value = '[]';
+loadContentPlans();

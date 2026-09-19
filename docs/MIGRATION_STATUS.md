@@ -345,3 +345,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 가로 결과: `dist/render/scene-preview-landscape.mp4`, H.264 1280×720, 30fps, 13.000000초, 전체 FFmpeg decode 통과, SHA256 `7D9B9AE23DF12DC11DC9CFA35348F323EAA83544A121D5431FD19AD7057C5204`.
 - 세로 결과: `dist/render/scene-preview-portrait.mp4`, H.264 720×1280, 30fps, 13.000000초, 전체 FFmpeg decode 통과, SHA256 `5220F268C570E33AD9849774089C9441322C1C012263BF8171830003B3D869BE`.
 - 이번 단위는 기존 fixture 렌더 검증이며 실제 사용자 미디어·Asset 파일 검증·최종 게시를 의미하지 않는다. VoiceBox/VOICEVOX는 실행하지 않았다.
+
+## 2026-09-20 ContentPlan 제작 시작 UI 연결 완료
+
+- `/planner`가 기존 ContentPlan 목록과 상세 상태를 불러오고, Preview 입력 준비가 끝난 경우에만 `DRAFT` 또는 `PLANNED` 계획을 `IN_PROGRESS`로 전환할 수 있게 연결했다.
+- READY/PUBLISHED 전환 UI는 추가하지 않았으며, SourceFrame `reviewed` 검수와 최종 상태 전환은 기존 서버 게이트가 계속 담당한다. ContentPlan 스키마와 ThumbnailProject 관계는 변경하지 않았다.
+- 검증: `node --check src/app/web/planner.js`, 전체 `npm test` 467/467, `npm run typecheck`, `npm run build`, `git diff --check` 통과. VoiceBox/VOICEVOX는 실행하지 않았다.
