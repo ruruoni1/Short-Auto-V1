@@ -283,3 +283,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `locked=true` 기존 Scene은 재실행 시 원문·문구·ID를 보존하고, 잘못된 자막 범위·중복 잠금·잘못된 입력은 명확한 진단으로 중단한다. Planner는 파일·Asset·외부 API를 생성하거나 수정하지 않는다.
 - 검증: AutoPlanner 4/4, 전체 `npm test` 451/451, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 공개 `@short-auto/core` export에 `planScenes`를 추가했다.
 - 다음 자동 단위는 Planner 결과를 Review Editor/ContentPlan 흐름에서 선택·검토할 수 있도록 연결하는 것이다. VoiceBox/VOICEVOX 작업은 재개하지 않는다.
+
+## 2026-09-20 AutoPlanner 로컬 API 연결 완료
+
+- `POST /api/auto-planner/plan`을 추가해 앱 서버가 SourceTimeline·선택적 Asset registry·기존 잠금 Scene을 받아 Planner 결과와 진단을 반환하도록 연결했다.
+- 잘못된 입력은 `400 PLANNER_INVALID`와 구조화 진단으로 반환하고, 외부 API·파일·TTS 엔진을 호출하지 않는다. 기존 로컬 Host/Origin/JSON 검증 경계를 그대로 적용한다.
+- 검증: AutoPlanner core/API 6/6, `npm run typecheck`, `npm run build` 통과. 다음 단위는 이 API 결과를 Review Editor의 제작 계획 검토 화면에 연결하는 것이다.
