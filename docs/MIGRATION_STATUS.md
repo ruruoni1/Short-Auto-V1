@@ -180,3 +180,11 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - readiness timeout 시 시작한 child만 종료하고, `stop()`도 manager가 소유한 child만 종료한다. VoiceStudio 내부 실행 명령과 포트는 하드코딩하지 않았다.
 - 검증: process manager 테스트 3/3, 전체 `npm test` 437/437, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
 - 다음 단위는 이 manager를 VoiceStudioProvider와 앱 서버/UI에 연결해 상태·voice 목록·실제 synthesis를 제공하는 통합이다.
+
+## 2026-09-20 VoiceStudio Provider synthesis 기반
+
+- `src/app/voicestudio/client.ts`에 `/v1/audio/voices`, `/engines`, `/v1/audio/speech` 호출을 추가하고 WAV 응답 구조를 검증한다.
+- `src/app/voicestudio/provider.ts`에 VoiceStudio를 공통 `TTSProvider`로 연결했다. 유연한 voice payload를 정규화하고 model/voice/input/response format/language/speed를 OpenAI-compatible speech 요청으로 전달하며 선택적 WAV 저장을 지원한다.
+- 기존 VoiceVox API와 UI는 변경하지 않았다. 아직 Provider registry를 앱 서버와 UI에 연결하지 않았으며, 실제 VoiceStudio backend 호출도 수행하지 않았다.
+- 검증: VoiceStudio Provider 테스트 3/3, 전체 `npm test` 440/440, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
+- 다음 단위는 TTS Provider registry를 앱 서버에 연결해 provider 상태·voice 목록·synthesis API를 노출하는 통합이다.

@@ -71,6 +71,53 @@ export class VoiceStudioClient {
     return response.json().catch(() => null);
   }
 
+  async listVoices(): Promise<unknown> {
+    const response = await this.#request('/v1/audio/voices');
+    return response.json().catch(() => null);
+  }
+
+  async listEngines(): Promise<unknown> {
+    const response = await this.#request('/engines');
+    return response.json().catch(() => null);
+  }
+
+  async synthesize(input: Record<string, unknown>): Promise<Uint8Array> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.#timeoutMs);
+    try {
+      const response = await this.#fetch(new URL('/v1/audio/speech', this.endpoint), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'audio/wav' },
+        body: JSON.stringify(input),
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new VoiceStudioError(
+        'SYNTHESIS_HTTP_ERROR',
+        `VoiceStudio synthesis 요청이 HTTP ${response.status}로 실패했습니다.`,
+        'http',
+        502,
+        response.status >= 500,
+        response.status,
+      );
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      if (bytes.length < 12 || String.fromCharCode(...bytes.subarray(0, 4)) !== 'RIFF' || String.fromCharCode(...bytes.subarray(8, 12)) !== 'WAVE') {
+        throw new VoiceStudioError('INVALID_WAV_RESPONSE', 'VoiceStudio synthesis 응답이 WAV 형식이 아닙니다.', 'invalid_response', 502, true);
+      }
+      return bytes;
+    } catch (error) {
+      if (error instanceof VoiceStudioError) throw error;
+      throw new VoiceStudioError(
+        controller.signal.aborted ? 'SYNTHESIS_TIMEOUT' : 'SYNTHESIS_UNAVAILABLE',
+        controller.signal.aborted ? 'VoiceStudio synthesis 시간이 초과되었습니다.' : 'VoiceStudio synthesis에 연결할 수 없습니다.',
+        'unavailable',
+        503,
+        true,
+      );
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   async #request(path: string): Promise<Response> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.#timeoutMs);
