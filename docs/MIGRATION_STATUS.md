@@ -338,3 +338,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 기존 Preview 계획·CaptionDisplayPolicy·SceneRender 동작은 보존하고, input/handoff 불변성·렌더 미지원 Scene 진단을 회귀 테스트로 고정했다. 승인·최종 렌더·FFmpeg·TTS·게시를 실행하지 않는다.
 - 검증: reviewed Preview adapter 5/5, 전체 `npm test` 467/467, `npm run typecheck`, `npm run build`, 공개 `@short-auto/core/render` import, `git diff --check` 통과.
 - 다음 자동 단위는 실제 Remotion Composition/MP4 검증이며, 미디어 파일·Asset readiness와 함께 별도 확인한다. VoiceBox/VOICEVOX는 계속 제외한다.
+
+## 2026-09-20 Remotion·FFmpeg Preview 렌더 검증 완료
+
+- `npm run render:fixture`와 `npm run render:portrait`를 순서대로 실행해 landscape/portrait Preview MP4를 각각 390/390 프레임으로 생성했다.
+- 가로 결과: `dist/render/scene-preview-landscape.mp4`, H.264 1280×720, 30fps, 13.000000초, 전체 FFmpeg decode 통과, SHA256 `7D9B9AE23DF12DC11DC9CFA35348F323EAA83544A121D5431FD19AD7057C5204`.
+- 세로 결과: `dist/render/scene-preview-portrait.mp4`, H.264 720×1280, 30fps, 13.000000초, 전체 FFmpeg decode 통과, SHA256 `5220F268C570E33AD9849774089C9441322C1C012263BF8171830003B3D869BE`.
+- 이번 단위는 기존 fixture 렌더 검증이며 실제 사용자 미디어·Asset 파일 검증·최종 게시를 의미하지 않는다. VoiceBox/VOICEVOX는 실행하지 않았다.
