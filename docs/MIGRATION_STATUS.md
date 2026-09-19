@@ -133,3 +133,11 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - FFmpeg/FFprobe PATH 실행 확인: FFmpeg 8.1.1, FFprobe 8.1.1.
 - 합성 fixture를 생성한 뒤 `npm run render:fixture`와 `npm run render:portrait`를 실행해 가로 1280x720·세로 720x1280 MP4를 실제 인코딩했다. `npm run render:verify`에서 두 파일 모두 390 frames, H.264/AAC, 48 kHz, full decode `PASS`와 프레임 추출·오디오 RMS 검증을 확인했다.
 - VOICEVOX 실제 엔진은 `127.0.0.1:50021/version` 및 `/speakers` 요청이 모두 connection refused였다. 실행 중인 VOICEVOX 프로세스와 PATH 명령도 확인되지 않아 동적 화자 목록·audio_query·synthesis·청취 품질은 아직 검증할 수 없다.
+
+## 2026-09-20 VoiceStudio 통합 기반 1단계
+
+- 첨부 인계 명세를 기준으로 현재 구조를 분석했다. 기존 저장소에는 VoiceVox 전용 client/service/routes만 있고 공통 TTS Provider, 외부 TTS 설치 관리자, backend 프로세스 수명주기 관리자는 아직 없다.
+- `src/app/tts/types.ts`에 Provider 상태·voice·합성 요청/결과 계약을 추가하고, `src/app/tts/registry.ts`에 중복 등록을 거부하는 Provider registry를 추가했다.
+- `src/app/voicevox/provider.ts`에 기존 VoiceVox service를 공통 Provider 계약으로 연결하는 어댑터를 추가했다. 동적 style identity, health 상태, speed parameter, 선택적 WAV 저장을 보존한다.
+- 검증: 새 Provider 테스트 4/4, 전체 `npm test` 422/422, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 VoiceVox Engine은 계속 실행되지 않아 외부 엔진 합성 검증은 별도 상태다.
+- 다음 단위는 VoiceStudio 설치 경로 탐지와 이미 실행 중인 localhost backend attach이며, 설치·자동 다운로드·backend spawn은 그 뒤에 진행한다.
