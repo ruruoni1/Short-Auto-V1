@@ -6,7 +6,7 @@ const state = {
   channelJobs: new Map(),
   lastDetailTrigger: null,
   voicevox: { voices: [], selectedSpeakerUuid: '', selectedStyleId: '', profile: null, audioUrl: null, busy: false },
-  voicestudio: { installed: false, busy: false, running: false },
+  voicestudio: { installed: false, busy: false, running: false, providerReady: false, model: 'kittentts', voices: [], selectedVoiceId: '', audioUrl: null },
 };
 
 const ui = {
@@ -44,6 +44,8 @@ const ui = {
     status: document.querySelector('#voicestudio-install-status'), dot: document.querySelector('#voicestudio-install-dot'),
     title: document.querySelector('#voicestudio-install-title-text'), copy: document.querySelector('#voicestudio-install-copy'),
     install: document.querySelector('#voicestudio-install'), start: document.querySelector('#voicestudio-start'), help: document.querySelector('#voicestudio-install-help'),
+    providerStatus: document.querySelector('#voicestudio-provider-status'), providerDot: document.querySelector('#voicestudio-provider-dot'), providerTitle: document.querySelector('#voicestudio-provider-title'), providerCopy: document.querySelector('#voicestudio-provider-copy'),
+    model: document.querySelector('#voicestudio-model'), voice: document.querySelector('#voicestudio-voice'), text: document.querySelector('#voicestudio-text'), preview: document.querySelector('#voicestudio-preview'), audio: document.querySelector('#voicestudio-audio'), result: document.querySelector('#voicestudio-result'),
   },
 };
 
@@ -893,6 +895,62 @@ function renderVoiceStudioInstall() {
   ui.voicestudio.start.textContent = state.voicestudio.running ? '실행 중' : 'VoiceStudio 실행';
 }
 
+const voiceStudioKittenVoices = ['Bella', 'Jasper', 'Luna', 'Bruno', 'Rosie', 'Hugo', 'Kiki', 'Leo'].map((id) => ({ id, name: id, language: 'English' }));
+
+function setVoiceStudioProviderStatus(kind, title, copy) {
+  ui.voicestudio.providerDot.className = `status-dot ${kind === 'ready' ? 'is-good' : kind === 'loading' ? '' : 'is-bad'}`;
+  ui.voicestudio.providerTitle.textContent = title;
+  ui.voicestudio.providerCopy.textContent = copy;
+}
+
+function voiceStudioModelVoices() {
+  if (state.voicestudio.model === 'kittentts') return voiceStudioKittenVoices;
+  return state.voicestudio.voices;
+}
+
+function renderVoiceStudioWorkspace() {
+  const voices = voiceStudioModelVoices();
+  const selected = state.voicestudio.selectedVoiceId;
+  ui.voicestudio.model.value = state.voicestudio.model;
+  ui.voicestudio.voice.replaceChildren(element('option', '', voices.length ? '음성을 선택하세요' : '사용 가능한 음성이 없습니다'));
+  ui.voicestudio.voice.firstChild.value = '';
+  voices.forEach((voice) => {
+    const option = element('option', '', voice.language ? `${voice.name} · ${voice.language}` : voice.name);
+    option.value = voice.id;
+    ui.voicestudio.voice.append(option);
+  });
+  ui.voicestudio.voice.value = selected;
+  const ready = state.voicestudio.providerReady;
+  ui.voicestudio.model.disabled = !ready || state.voicestudio.busy;
+  ui.voicestudio.voice.disabled = !ready || !voices.length || state.voicestudio.busy;
+  ui.voicestudio.preview.disabled = !ready || !selected || !ui.voicestudio.text.value.trim() || state.voicestudio.busy;
+  ui.voicestudio.preview.textContent = state.voicestudio.busy ? '음성 생성 중…' : 'VoiceStudio 미리듣기';
+}
+
+async function loadVoiceStudioProvider() {
+  setVoiceStudioProviderStatus('loading', 'backend 상태 확인 중', 'VoiceStudio provider와 음성 목록을 확인하고 있습니다.');
+  try {
+    const payload = await request('/api/tts/providers');
+    const provider = Array.isArray(payload?.data) ? payload.data.find((item) => item.provider === 'voicestudio') : null;
+    state.voicestudio.providerReady = provider?.state === 'ready';
+    state.voicestudio.running = state.voicestudio.providerReady;
+    if (!state.voicestudio.providerReady) {
+      state.voicestudio.voices = [];
+      state.voicestudio.selectedVoiceId = '';
+      setVoiceStudioProviderStatus('unavailable', 'VoiceStudio backend 미연결', '설치 상태 카드에서 VoiceStudio 실행을 선택하세요.');
+      return;
+    }
+    const voices = await request('/api/tts/providers/voicestudio/voices');
+    state.voicestudio.voices = Array.isArray(voices?.data) ? voices.data : [];
+    setVoiceStudioProviderStatus('ready', 'VoiceStudio backend 준비됨', `${state.voicestudio.voices.length}개 기본 음성을 확인했습니다.`);
+  } catch (error) {
+    state.voicestudio.providerReady = false;
+    setVoiceStudioProviderStatus('unavailable', 'VoiceStudio backend 확인 실패', errorMessage(error));
+  } finally {
+    renderVoiceStudioWorkspace();
+  }
+}
+
 function setVoiceStudioInstallStatus(kind, title, copy) {
   ui.voicestudio.dot.className = `status-dot ${kind === 'ready' ? 'is-good' : kind === 'loading' ? '' : 'is-bad'}`;
   ui.voicestudio.title.textContent = title;
@@ -912,7 +970,10 @@ async function loadVoiceStudio() {
     }
   } catch (error) {
     setVoiceStudioInstallStatus('unavailable', '설치 상태를 확인할 수 없습니다', errorMessage(error));
-  } finally { renderVoiceStudioInstall(); }
+  } finally {
+    renderVoiceStudioInstall();
+    await loadVoiceStudioProvider();
+  }
 }
 
 async function installVoiceStudio() {
@@ -946,12 +1007,40 @@ async function startVoiceStudio() {
     state.voicestudio.running = payload?.data?.ownership === 'external' || payload?.data?.ownership === 'nihon-managed';
     setVoiceStudioInstallStatus('ready', 'VoiceStudio backend 준비됨', '이제 VoiceStudio provider로 음성을 생성할 수 있습니다.');
     ui.voicestudio.help.textContent = payload?.data?.ownership === 'external' ? '기존에 실행 중인 VoiceStudio backend에 연결했습니다.' : 'Short-auto가 시작한 VoiceStudio backend에 연결했습니다.';
+    await loadVoiceStudioProvider();
     showToast('VoiceStudio backend에 연결했습니다.');
   } catch (error) {
     setVoiceStudioInstallStatus('unavailable', 'VoiceStudio 실행 실패', errorMessage(error));
   } finally {
     state.voicestudio.busy = false;
     renderVoiceStudioInstall();
+  }
+}
+
+async function previewVoiceStudio() {
+  const text = ui.voicestudio.text.value.trim();
+  if (!state.voicestudio.selectedVoiceId) { setVoiceStudioProviderStatus('unavailable', '음성을 선택하세요', '미리듣기 전에 VoiceStudio 음성을 선택해야 합니다.'); return; }
+  if (!text) { ui.voicestudio.text.focus(); return; }
+  state.voicestudio.busy = true;
+  renderVoiceStudioWorkspace();
+  try {
+    const url = await voicevoxAudio('/api/tts/providers/voicestudio/synthesize', {
+      text,
+      voiceId: state.voicestudio.selectedVoiceId,
+      providerOptions: { model: state.voicestudio.model },
+    });
+    if (state.voicestudio.audioUrl) URL.revokeObjectURL(state.voicestudio.audioUrl);
+    state.voicestudio.audioUrl = url;
+    ui.voicestudio.audio.src = url;
+    ui.voicestudio.audio.hidden = false;
+    ui.voicestudio.result.hidden = false;
+    ui.voicestudio.result.textContent = `${state.voicestudio.selectedVoiceId} 음성 미리듣기를 준비했습니다.`;
+  } catch (error) {
+    ui.voicestudio.result.hidden = false;
+    ui.voicestudio.result.textContent = errorMessage(error);
+  } finally {
+    state.voicestudio.busy = false;
+    renderVoiceStudioWorkspace();
   }
 }
 
@@ -1005,6 +1094,10 @@ function bindEvents() {
   ui.voicevox.retry.addEventListener('click', loadVoicevox);
   ui.voicestudio.install.addEventListener('click', installVoiceStudio);
   ui.voicestudio.start.addEventListener('click', startVoiceStudio);
+  ui.voicestudio.model.addEventListener('change', () => { state.voicestudio.model = ui.voicestudio.model.value; state.voicestudio.selectedVoiceId = ''; renderVoiceStudioWorkspace(); });
+  ui.voicestudio.voice.addEventListener('change', () => { state.voicestudio.selectedVoiceId = ui.voicestudio.voice.value; renderVoiceStudioWorkspace(); });
+  ui.voicestudio.text.addEventListener('input', renderVoiceStudioWorkspace);
+  ui.voicestudio.preview.addEventListener('click', previewVoiceStudio);
   ui.voicevox.speaker.addEventListener('change', () => { state.voicevox.selectedSpeakerUuid = ui.voicevox.speaker.value; state.voicevox.selectedStyleId = ''; renderVoicevox(); });
   ui.voicevox.style.addEventListener('change', () => { state.voicevox.selectedStyleId = ui.voicevox.style.value; renderVoicevox(); });
   ui.voicevox.profileName.addEventListener('input', renderVoicevox);

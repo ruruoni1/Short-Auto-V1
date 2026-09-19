@@ -246,3 +246,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - KittenTTS `Bella` voice로 직접 WAV 합성(202,444 bytes, RIFF/WAVE)과 Short-auto `/api/tts/providers/voicestudio/synthesize` 연결을 확인했다. 첫 모델 로딩이 5초를 넘을 수 있어 VoiceStudio synthesis timeout을 120초로 분리했다.
 - 생성 WAV는 FFprobe에서 `pcm_s16le`, 24 kHz, mono, 4.791667초, `format_name=wav`로 확인했고 FFmpeg decode 검사도 오류 없이 통과했다.
 - 현재 `/api/tts/providers`에서 VoiceStudio는 `ready`, VOICEVOX는 별도 프로세스가 없어 `unavailable`이다. OmniVoice 기본 모델은 아직 다운로드하지 않았고, 용량이 작은 KittenTTS 경로로 엔진 연결을 검증했다.
+
+## 2026-09-20 VoiceStudio 미리듣기 UI 연결
+
+- 기존 설치·실행 카드 아래에 VoiceStudio 엔진 선택, 음성 선택, 문장 입력, WAV 미리듣기 UI를 추가했다.
+- 기본 엔진은 `kittentts`로 두고 Bella/Jasper/Luna/Bruno/Rosie/Hugo/Kiki/Leo preset을 제공한다. `default` 선택 시 backend가 제공하는 VoiceStudio voice 목록을 사용한다.
+- backend가 이미 실행 중이면 provider 상태와 voice 목록을 자동으로 읽고, 설치 카드에서 실행한 뒤에도 동일한 상태를 다시 로드한다. 합성은 기존 `/api/tts/providers/voicestudio/synthesize` 계약을 사용하며 출력 경로를 브라우저에 노출하지 않는다.
+- 검증: `node --check src/app/web/app.js`, `npm test` 446/446, `npm run typecheck`, `npm run build`, 실제 HTML 요소 확인, provider `ready`·7개 voice 목록·WAV 200 응답 확인.
