@@ -54,7 +54,10 @@ export class VoiceStudioProvider implements TTSProvider {
   async synthesize(request: TTSSynthesisRequest): Promise<TTSSynthesisResult> {
     if (!request.voiceId) throw new Error('VOICE_REQUIRED');
     const options = request.providerOptions ?? {};
-    const model = typeof options.model === 'string' && options.model.length > 0 ? options.model : 'default';
+    const requestedModel = typeof options.model === 'string' && options.model.length > 0 ? options.model : 'default';
+    // VoiceStudio's OpenAI-compatible endpoint accepts concrete engine IDs (or
+    // tts-1/tts-1-hd aliases), but not the UI-facing `default` label.
+    const model = requestedModel === 'default' ? 'omnivoice' : requestedModel;
     const input: Record<string, unknown> = {
       model,
       voice: request.voiceId,

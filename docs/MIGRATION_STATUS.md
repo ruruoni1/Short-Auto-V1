@@ -253,3 +253,19 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 기본 엔진은 `kittentts`로 두고 Bella/Jasper/Luna/Bruno/Rosie/Hugo/Kiki/Leo preset을 제공한다. `default` 선택 시 backend가 제공하는 VoiceStudio voice 목록을 사용한다.
 - backend가 이미 실행 중이면 provider 상태와 voice 목록을 자동으로 읽고, 설치 카드에서 실행한 뒤에도 동일한 상태를 다시 로드한다. 합성은 기존 `/api/tts/providers/voicestudio/synthesize` 계약을 사용하며 출력 경로를 브라우저에 노출하지 않는다.
 - 검증: `node --check src/app/web/app.js`, `npm test` 446/446, `npm run typecheck`, `npm run build`, 실제 HTML 요소 확인, provider `ready`·7개 voice 목록·WAV 200 응답 확인.
+
+## 2026-09-20 OmniVoice 기본 모델·일본어 합성 검증 완료
+
+- VoiceStudio 모델 카탈로그에서 `k2-fsa/OmniVoice`가 로컬 Hugging Face 캐시에 설치 완료 상태임을 확인했다. 설치 파일은 저장소에 포함하지 않으며 VoiceStudio 캐시(`C:\Users\Administrator\AppData\Local\OmniVoice\hf_cache`)에서 관리한다.
+- `POST /setup/warmup` 후 `/model/status`가 `ready`·`loaded=true`·`checkpoint=k2-fsa/OmniVoice`를 반환했다. `/model/loaded`에서 활성 TTS 모델이 `cuda:0`에 로드되고 VRAM 사용량 약 2,711.7MB로 확인됐다.
+- `POST /v1/audio/speech`에 `model=omnivoice`, `voice=demo0001`, `language=ja`, WAV 응답을 요청해 일본어 문장을 합성했다. 응답은 HTTP 200, 418,604 bytes RIFF/WAVE, 약 8.72초였다.
+- FFprobe에서 `pcm_s16le`, 24kHz, mono, `format_name=wav`를 확인했고 FFmpeg decode 검사도 오류 없이 통과했다. VoiceStudio 엔진 실행 증거는 `evidence_state=loaded`, `actual_execution_provider=cuda:0`, `precision=torch.float16`이다.
+- 이전 항목의 “OmniVoice 기본 모델은 아직 다운로드하지 않았다”는 기록은 이번 검증으로 해소되었다. KittenTTS 경로와 함께 OmniVoice 일본어 합성 경로도 실제 환경에서 검증되었다.
+- 다음 단위는 Short-auto 미리듣기 UI에서 OmniVoice/일본어를 선택해 동일 경로를 호출하는 통합 검증과, 완료 후 기능 단위 테스트·상태 문서 갱신이다.
+
+## 2026-09-20 OmniVoice Short-auto 미리듣기 통합 검증 완료
+
+- VoiceStudio OpenAI-compatible API가 `default` 모델 문자열을 허용하지 않고 HTTP 400을 반환하는 동작을 확인했다. Short-auto provider는 UI 호환값 `default`를 실제 엔진 ID `omnivoice`로 정규화하고, UI 엔진 선택도 `OmniVoice` 엔진 ID를 직접 사용하도록 수정했다.
+- 회귀 테스트를 추가해 `default → omnivoice` 매핑을 고정했다. 전체 `npm test` 447/447, `npm run typecheck`, `npm run build`, `node --check src/app/web/app.js`, `git diff --check`를 통과했다.
+- 실행 중인 VoiceStudio backend에 대해 Short-auto `POST /api/tts/providers/voicestudio/synthesize`로 일본어 문장을 전송했다. 응답은 HTTP 200, `Content-Type: audio/wav`, `X-TTS-Engine: omnivoice`, 255,404 bytes였다.
+- 통합 WAV는 FFprobe에서 `pcm_s16le`, 24kHz, mono, 5.32초로 확인했고 FFmpeg decode 검사도 오류 없이 통과했다. 이제 UI에서 KittenTTS(영어)와 OmniVoice(다국어·일본어)를 각각 선택할 수 있다.

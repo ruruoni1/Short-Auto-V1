@@ -34,3 +34,12 @@ test('VoiceStudio provider requires a voice selection', async () => {
   const provider = new VoiceStudioProvider({ synthesize: async () => wav } as never);
   await assert.rejects(() => provider.synthesize({ text: '테스트' }), /VOICE_REQUIRED/);
 });
+
+test('VoiceStudio provider maps the UI default model to OmniVoice', async () => {
+  let request: unknown;
+  const provider = new VoiceStudioProvider({
+    synthesize: async (input: Record<string, unknown>) => { request = input; return wav; },
+  } as never);
+  await provider.synthesize({ text: 'こんにちは', voiceId: 'demo0001', language: 'ja', providerOptions: { model: 'default' } });
+  assert.deepEqual(request, { model: 'omnivoice', voice: 'demo0001', input: 'こんにちは', response_format: 'wav', language: 'ja' });
+});
