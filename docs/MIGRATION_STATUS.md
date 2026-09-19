@@ -141,3 +141,11 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `src/app/voicevox/provider.ts`에 기존 VoiceVox service를 공통 Provider 계약으로 연결하는 어댑터를 추가했다. 동적 style identity, health 상태, speed parameter, 선택적 WAV 저장을 보존한다.
 - 검증: 새 Provider 테스트 4/4, 전체 `npm test` 422/422, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 VoiceVox Engine은 계속 실행되지 않아 외부 엔진 합성 검증은 별도 상태다.
 - 다음 단위는 VoiceStudio 설치 경로 탐지와 이미 실행 중인 localhost backend attach이며, 설치·자동 다운로드·backend spawn은 그 뒤에 진행한다.
+
+## 2026-09-20 VoiceStudio localhost attach 기반
+
+- `src/app/voicestudio/models.ts`에 localhost 전용 endpoint와 구조화 오류·health 상태 계약을 추가했다.
+- `src/app/voicestudio/client.ts`에 `/health`와 `/system/info` 조회 client를 추가했다. `ready`·`starting`·`unavailable`·`error`를 구분하고 timeout/HTTP 오류를 정규화한다.
+- `src/app/voicestudio/detector.ts`에 기존 backend를 `external` 소유로 탐지하는 경로를 추가했다. 이 단계에서는 외부 프로세스를 시작하거나 종료하지 않는다.
+- 검증: VoiceStudio client/detector 테스트 4/4, 전체 `npm test` 426/426, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
+- 다음 단위는 공식 VoiceStudio 설치 경로와 Release asset 탐지이며, 자동 다운로드 전에 checksum·동의·설치 완료 감지를 설계한다.
