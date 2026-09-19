@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
 import { applyReviewedScenePlan } from '../scene-plan-adapter.js';
+import { resolveAssets } from '../asset.js';
 import type { Diagnostic } from '../validation.js';
 
 type ReadBody = (req: IncomingMessage, limit?: number) => Promise<unknown>;
@@ -33,7 +34,14 @@ export function createScenePlanRoute() {
         json(res, 400, { error: { code: 'SCENE_PLAN_INVALID', message: '검토 완료 장면 계획을 확인하세요.', diagnostics: result.diagnostics } });
         return true;
       }
-      json(res, 200, { data: { input: result.input, diagnostics: result.diagnostics } });
+      const assets = resolveAssets({ production: result.input.production, overrides: result.input.overrides });
+      json(res, 200, {
+        data: {
+          input: result.input,
+          diagnostics: result.diagnostics,
+          assets: { plan: assets.valid ? assets.plan : null, diagnostics: assets.diagnostics },
+        },
+      });
       return true;
     } catch (error) {
       json(res, 400, { error: { code: 'SCENE_PLAN_INVALID', message: '검토 완료 장면 계획을 확인하세요.', diagnostics: requestDiagnostics(error) } });

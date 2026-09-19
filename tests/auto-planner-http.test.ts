@@ -18,8 +18,10 @@ function previewRequest() {
   const { production, source, overrides } = exampleWorkspace().projects[0]!;
   const planned = planScenes({ source });
   assert.equal(planned.valid, true);
+  const input = structuredClone({ production, source, overrides });
+  input.production.assets.clip01 = { type: 'anime_clip', ...input.production.assets.clip01, status: 'ready', src: 'assets/clip01.mp4' };
   return {
-    input: { production, source, overrides },
+    input,
     handoff: { version: 1, reviewedAt: '2026-09-20T00:00:00.000Z', scenes: planned.scenes, diagnostics: planned.diagnostics },
   };
 }
@@ -61,10 +63,16 @@ test('reviewed scene plan HTTP route returns Preview input', async t => {
   const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
   const request = previewRequest();
   const response = await fetch(`${base}/api/auto-planner/preview-input`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(request) });
-  assert.equal(response.status, 200);
+  assert.equal(response.status, 200, JSON.stringify(await response.clone().json()));
   const payload = await response.json();
   assert.deepEqual(payload.data.input.production.scenes, request.handoff.scenes);
   assert.ok(Array.isArray(payload.data.diagnostics));
+  assert.ok(payload.data.assets);
+  assert.ok(payload.data.assets.plan, JSON.stringify(payload.data.assets.diagnostics));
+  assert.equal(payload.data.assets.plan.fileVerification, 'not_performed');
+  assert.equal(payload.data.assets.plan.renderVerification, 'not_performed');
+  assert.ok(Array.isArray(payload.data.assets.plan.finalAssetReadiness.diagnostics));
+  assert.ok(Array.isArray(payload.data.assets.diagnostics));
 });
 
 test('reviewed scene plan HTTP route uses a stable error envelope', async t => {

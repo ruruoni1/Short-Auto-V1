@@ -325,3 +325,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 새 계획 생성·실패 시 Preview 준비 결과를 초기화하고, 렌더·게시·TTS 실행은 수행하지 않는다. 기존 검토 완료 JSON 복사 흐름과 오류 안내를 보존했다.
 - 검증: `node --check src/app/web/planner.js`, 전체 `npm test` 462/462, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
 - 다음 자동 단위는 실제 Preview renderer 호출 전 입력·Asset readiness를 통합 검증하는 단계이며, VoiceBox/VOICEVOX는 계속 제외한다.
+
+## 2026-09-20 Preview 입력 Asset readiness 노출
+
+- `POST /api/auto-planner/preview-input` 성공 응답에 reviewed input을 기준으로 한 `resolveAssets` 결과를 `data.assets.plan`과 `data.assets.diagnostics`로 추가했다. 기존 `data.input`, `data.diagnostics`와 `SCENE_PLAN_INVALID` 오류 envelope는 유지한다.
+- `/planner`는 Asset readiness, `fileVerification`, `renderVerification`, Asset diagnostics를 읽기 전용 textContent/pre로 표시한다. Asset resolver는 파일·렌더·TTS·게시를 실행하지 않으며 검증 상태는 `not_performed`로 노출된다.
+- 검증: route targeted test, `node --check src/app/web/planner.js`, `npm run typecheck`, `npm test`, `npm run build`, `git diff --check`.

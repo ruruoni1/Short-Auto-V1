@@ -13,6 +13,8 @@ const previewResult = document.querySelector('#preview-result');
 const previewResultSummary = document.querySelector('#preview-result-summary');
 const previewInputOutput = document.querySelector('#preview-input-output');
 const previewDiagnosticsOutput = document.querySelector('#preview-diagnostics-output');
+const assetReadinessOutput = document.querySelector('#asset-readiness-output');
+const assetDiagnosticsOutput = document.querySelector('#asset-diagnostics-output');
 let reviewableResult = null;
 let reviewedHandoff = null;
 
@@ -45,6 +47,8 @@ function resetPreviewResult() {
   previewResultSummary.textContent = '';
   previewInputOutput.textContent = '';
   previewDiagnosticsOutput.textContent = '';
+  assetReadinessOutput.textContent = '';
+  assetDiagnosticsOutput.textContent = '';
 }
 
 function setReviewableResult(result) {
@@ -135,11 +139,18 @@ async function requestPreviewInput(input, handoff) {
   return payload.data;
 }
 
-function showPreviewResult(input, items = [], message) {
+function showPreviewResult(input, items = [], message, assets = null) {
   previewResult.hidden = false;
   previewResultSummary.textContent = message;
   previewInputOutput.textContent = JSON.stringify(input, null, 2);
   previewDiagnosticsOutput.textContent = JSON.stringify(items, null, 2);
+  const plan = assets?.plan;
+  assetReadinessOutput.textContent = JSON.stringify({
+    finalAssetReadiness: plan?.finalAssetReadiness || null,
+    fileVerification: plan?.fileVerification || 'not_available',
+    renderVerification: plan?.renderVerification || 'not_available',
+  }, null, 2);
+  assetDiagnosticsOutput.textContent = JSON.stringify(assets?.diagnostics || [], null, 2);
 }
 
 document.querySelector('#load-sample').addEventListener('click', () => {
@@ -186,8 +197,10 @@ preparePreviewInput.addEventListener('click', async () => {
     previewResultSummary.textContent = 'Preview 입력을 준비하는 중입니다.';
     previewInputOutput.textContent = '';
     previewDiagnosticsOutput.textContent = '';
+    assetReadinessOutput.textContent = '';
+    assetDiagnosticsOutput.textContent = '';
     const result = await requestPreviewInput(input, reviewedHandoff);
-    showPreviewResult(result.input, result.diagnostics, 'Preview 입력이 준비되었습니다. 이 화면에서는 렌더를 실행하지 않습니다.');
+    showPreviewResult(result.input, result.diagnostics, 'Preview 입력이 준비되었습니다. 이 화면에서는 렌더를 실행하지 않습니다.', result.assets);
     setAlert();
   } catch (error) {
     const message = error instanceof SyntaxError ? '기본 TimelineInput JSON 형식을 확인하세요.' : error.message;

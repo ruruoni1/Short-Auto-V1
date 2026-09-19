@@ -36,6 +36,7 @@ th { color: #68778b; font-size: 12px; white-space: nowrap; }
 .empty { color: #68778b; text-align: center; padding: 28px 8px; }
 .preview-result { display: grid; gap: 8px; margin-top: 20px; padding-top: 18px; border-top: 1px solid #e6eaf1; }
 .preview-result h3, .preview-result h4 { margin: 0; }
+.asset-readiness { display: grid; gap: 8px; }
 .preview-result h3 { font-size: 16px; }
 .preview-result h4 { color: #536174; font-size: 12px; }
 .preview-result pre { max-height: 300px; margin: 0; overflow: auto; padding: 12px; border: 1px solid #dbe2ef; border-radius: 8px; background: #fbfcfe; color: #172033; font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
