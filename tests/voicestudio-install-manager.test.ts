@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { VoiceStudioInstallManager } from '../src/app/voicestudio/install-manager.js';
+import { VoiceStudioInstallManager, defaultVoiceStudioInstallCandidates } from '../src/app/voicestudio/install-manager.js';
 import { VoiceStudioError } from '../src/app/voicestudio/models.js';
 
 const release = {
@@ -9,6 +9,14 @@ const release = {
   checksumManifest: { name: 'SHA256SUMS-Windows.x64.txt', url: 'https://github.com/example/checksums.txt' },
 };
 const downloaded = { path: 'C:\\temp\\VoiceStudio.exe', bytes: 10, sha256: 'a'.repeat(64), downloaded: true };
+
+test('default install candidates include the current-user product executable name', () => {
+  const candidates = defaultVoiceStudioInstallCandidates({
+    LOCALAPPDATA: 'C:\\Users\\test\\AppData\\Local',
+    ProgramFiles: 'C:\\Program Files',
+  });
+  assert.ok(candidates.includes('C:\\Users\\test\\AppData\\Local\\VoiceStudio (Current User)\\omnivoice-studio.exe'));
+});
 
 test('install manager runs a consented installer and waits for installed executable', async () => {
   let runs = 0;

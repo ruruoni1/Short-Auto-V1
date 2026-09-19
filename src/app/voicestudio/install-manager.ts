@@ -47,9 +47,15 @@ function defaultRunInstaller(installerPath: string): Promise<{ exitCode: number 
 export function defaultVoiceStudioInstallCandidates(env: NodeJS.ProcessEnv = process.env): string[] {
   const candidates: string[] = [];
   if (env.LOCALAPPDATA) {
+    // VoiceStudio's current-user MSI identifies the executable as
+    // `omnivoice-studio.exe` (the product is branded VoiceStudio in the UI).
+    // Keep the historical `VoiceStudio.exe` path for older/portable builds.
+    candidates.push(path.join(env.LOCALAPPDATA, 'VoiceStudio (Current User)', 'omnivoice-studio.exe'));
     candidates.push(path.join(env.LOCALAPPDATA, 'VoiceStudio (Current User)', 'VoiceStudio.exe'));
+    candidates.push(path.join(env.LOCALAPPDATA, 'Programs', 'VoiceStudio', 'omnivoice-studio.exe'));
     candidates.push(path.join(env.LOCALAPPDATA, 'Programs', 'VoiceStudio', 'VoiceStudio.exe'));
   }
+  if (env.ProgramFiles) candidates.push(path.join(env.ProgramFiles, 'VoiceStudio', 'omnivoice-studio.exe'));
   if (env.ProgramFiles) candidates.push(path.join(env.ProgramFiles, 'VoiceStudio', 'VoiceStudio.exe'));
   return candidates;
 }

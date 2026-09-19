@@ -231,3 +231,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - resolver는 checksum이 검증되는 Electron EXE를 우선하고, 없으면 Current User MSI, 마지막으로 per-machine MSI를 선택한다. checksum이 없는 파일은 절대 설치 대상으로 사용하지 않는다.
 - MSI는 `msiexec.exe /i` 표시 실행으로 처리하고, Current User 설치 경로를 기본 탐지 후보에 추가했다.
 - 검증: 실제 GitHub Release resolver가 `VoiceStudio_Current_User_0.5.3_x64_en-US.msi`와 SHA256 `579005a0af35ba3004927188be040fda157b34400123dcc9c3d2c9e8f1195630`을 반환했고, 전체 `npm test` 445/445, `npm run typecheck`, `npm run build`, `git diff --check`가 통과했다.
+
+## 2026-09-20 VoiceStudio 실제 설치 후 bootstrap 진단
+
+- Current User MSI는 `C:\\Users\\Administrator\\AppData\\Local\\VoiceStudio (Current User)\\omnivoice-studio.exe`를 설치했으며, 기존 `VoiceStudio.exe` 후보만으로는 설치 완료를 감지하지 못했다. 설치 locator에 실제 제품 실행 파일명과 기존 호환 후보를 함께 등록했다.
+- 첫 실행 bootstrap은 `C:\\Python313\\python.exe`를 사용해 `curated-tokenizers==0.0.9` Cython 빌드에서 실패했다. 로그상 `Python 3.11` 인터프리터가 시스템에 존재하므로, Clean & Retry에서 Python 3.11을 선택하고 실패한 `.venv`를 재생성해야 한다.
+- 이 실패는 네트워크 오류가 아니라 Python 3.13 환경에서의 native dependency 빌드 호환성 문제이며, `uv` managed Python의 신뢰할 수 없는 탑재 지점 오류도 함께 기록됐다. Short-auto는 설치 후 실제 backend health·voice 목록·WAV 합성 검증을 아직 완료하지 못했다.
+- 검증: 설치 후보 회귀 테스트 포함 전체 `npm test` 446/446, `npm run typecheck` 통과.
