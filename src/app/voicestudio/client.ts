@@ -10,6 +10,7 @@ export interface VoiceStudioClientOptions {
   endpoint?: string;
   fetch?: typeof fetch;
   timeoutMs?: number;
+  synthesisTimeoutMs?: number;
 }
 
 function object(value: unknown): value is Record<string, unknown> {
@@ -38,11 +39,13 @@ export class VoiceStudioClient {
   readonly endpoint: string;
   readonly #fetch: typeof fetch;
   readonly #timeoutMs: number;
+  readonly #synthesisTimeoutMs: number;
 
   constructor(options: VoiceStudioClientOptions = {}) {
     this.endpoint = parseVoiceStudioEndpoint(options.endpoint ?? DEFAULT_VOICESTUDIO_ENDPOINT).origin;
     this.#fetch = options.fetch ?? fetch;
     this.#timeoutMs = z.number().int().min(100).max(300_000).parse(options.timeoutMs ?? 5_000);
+    this.#synthesisTimeoutMs = z.number().int().min(100).max(600_000).parse(options.synthesisTimeoutMs ?? 120_000);
   }
 
   async health(): Promise<VoiceStudioHealth> {
@@ -83,7 +86,7 @@ export class VoiceStudioClient {
 
   async synthesize(input: Record<string, unknown>): Promise<Uint8Array> {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.#timeoutMs);
+    const timer = setTimeout(() => controller.abort(), this.#synthesisTimeoutMs);
     try {
       const response = await this.#fetch(new URL('/v1/audio/speech', this.endpoint), {
         method: 'POST',

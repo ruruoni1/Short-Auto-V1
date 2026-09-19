@@ -238,3 +238,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 첫 실행 bootstrap은 `C:\\Python313\\python.exe`를 사용해 `curated-tokenizers==0.0.9` Cython 빌드에서 실패했다. 로그상 `Python 3.11` 인터프리터가 시스템에 존재하므로, Clean & Retry에서 Python 3.11을 선택하고 실패한 `.venv`를 재생성해야 한다.
 - 이 실패는 네트워크 오류가 아니라 Python 3.13 환경에서의 native dependency 빌드 호환성 문제이며, `uv` managed Python의 신뢰할 수 없는 탑재 지점 오류도 함께 기록됐다. Short-auto는 설치 후 실제 backend health·voice 목록·WAV 합성 검증을 아직 완료하지 못했다.
 - 검증: 설치 후보 회귀 테스트 포함 전체 `npm test` 446/446, `npm run typecheck` 통과.
+
+## 2026-09-20 VoiceStudio 실제 엔진 검증 완료
+
+- Python 3.11 정식 런타임을 사용자 범위에 설치하고, VoiceStudio `v0.5.3` 프로젝트 `.venv`를 Python 3.11로 재생성했다. `uv sync --no-dev`가 217개 패키지를 설치했으며 `curated-tokenizers==0.0.9`를 포함한 의존성 설치가 완료됐다.
+- VoiceStudio Electron이 CUDA(`NVIDIA GeForce RTX 3060`) backend로 실행되어 `http://127.0.0.1:3900/health`가 `status=ok`, `version=0.5.3`을 반환했다. `/openapi.json`과 `/v1/audio/voices`도 정상 응답했다.
+- KittenTTS `Bella` voice로 직접 WAV 합성(202,444 bytes, RIFF/WAVE)과 Short-auto `/api/tts/providers/voicestudio/synthesize` 연결을 확인했다. 첫 모델 로딩이 5초를 넘을 수 있어 VoiceStudio synthesis timeout을 120초로 분리했다.
+- 현재 `/api/tts/providers`에서 VoiceStudio는 `ready`, VOICEVOX는 별도 프로세스가 없어 `unavailable`이다. OmniVoice 기본 모델은 아직 다운로드하지 않았고, 용량이 작은 KittenTTS 경로로 엔진 연결을 검증했다.
