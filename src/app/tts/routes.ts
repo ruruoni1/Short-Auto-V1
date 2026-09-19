@@ -2,6 +2,8 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
 import type { AppRoute } from '../server.js';
 import { TTSProviderRegistry } from './registry.js';
+import type { VoiceStudioInstallLocation, VoiceStudioInstallManager, VoiceStudioInstallRequest, VoiceStudioInstallResult, VoiceStudioInstallLocator } from '../voicestudio/install-manager.js';
+import type { VoiceStudioInstaller, VoiceStudioRelease } from '../voicestudio/installer.js';
 
 const SynthesisInputSchema = z.strictObject({
   text: z.string().min(1).max(5_000),
@@ -34,7 +36,22 @@ function errorResponse(error: unknown): { status: number; error: { code: string;
   };
 }
 
-export function createTTSRoute(registry: TTSProviderRegistry): AppRoute {
+export interface TTSRouteOptions {
+  voiceStudioInstall?: {
+    installer: Pick<VoiceStudioInstaller, 'resolveLatestStable'>;
+    manager: Pick<VoiceStudioInstallManager, 'install'>;
+    locator: VoiceStudioInstallLocator;
+    targetDirectory: string;
+  };
+}
+
+const InstallInputSchema = z.strictObject({ consent: z.literal(true) });
+
+function installationData(location: VoiceStudioInstallLocation | undefined) {
+  return location ? { installed: true, executablePath: location.executablePath } : { installed: false };
+}
+
+export function createTTSRoute(registry: TTSProviderRegistry, options: TTSRouteOptions = {}): AppRoute {
   return async (req: IncomingMessage, res: ServerResponse, path, method, body, json): Promise<boolean> => {
     if (!path.startsWith('/api/tts')) return false;
     try {
@@ -48,6 +65,25 @@ export function createTTSRoute(registry: TTSProviderRegistry): AppRoute {
           }
         }));
         json(res, 200, { data: providers }); return true;
+      }
+
+      if (path === '/api/tts/providers/voicestudio/installation' && method === 'GET') {
+        const install = options.voiceStudioInstall;
+        if (!install) { json(res, 404, { error: { code: 'INSTALL_UNAVAILABLE', message: 'VoiceStudio 설치 관리가 구성되지 않았습니다.' } }); return true; }
+        json(res, 200, { data: installationData(await install.locator.find()) }); return true;
+      }
+      if (path === '/api/tts/providers/voicestudio/install' && method === 'POST') {
+        const install = options.voiceStudioInstall;
+        if (!install) { json(res, 404, { error: { code: 'INSTALL_UNAVAILABLE', message: 'VoiceStudio 설치 관리가 구성되지 않았습니다.' } }); return true; }
+        InstallInputSchema.parse(await body(req));
+        const release: VoiceStudioRelease = await install.installer.resolveLatestStable();
+        const request: VoiceStudioInstallRequest = { targetDirectory: install.targetDirectory };
+        const result: VoiceStudioInstallResult = await install.manager.install(release, request);
+        json(res, 201, { data: {
+          version: release.version,
+          installer: { name: release.installer.name, bytes: result.installer.bytes, sha256: result.installer.sha256, downloaded: result.installer.downloaded },
+          installation: installationData(result.installation),
+        } }); return true;
       }
 
       const id = providerId(path);

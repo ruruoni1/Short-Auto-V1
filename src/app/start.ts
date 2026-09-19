@@ -22,6 +22,8 @@ import { createTTSRoute } from './tts/routes.js';
 import { VoicevoxProvider } from './voicevox/provider.js';
 import { VoiceStudioClient } from './voicestudio/client.js';
 import { VoiceStudioProvider } from './voicestudio/provider.js';
+import { VoiceStudioInstaller } from './voicestudio/installer.js';
+import { FileVoiceStudioInstallLocator, VoiceStudioInstallManager } from './voicestudio/install-manager.js';
 
 loadActiveDocuments();
 mkdirSync(APP_PATHS.data, { recursive: true });
@@ -41,11 +43,21 @@ ttsProviders.register(new VoicevoxProvider(voicevox));
 ttsProviders.register(new VoiceStudioProvider(new VoiceStudioClient(
   process.env.VOICESTUDIO_ENDPOINT ? { endpoint: process.env.VOICESTUDIO_ENDPOINT } : {},
 )));
+const voiceStudioInstaller = new VoiceStudioInstaller();
+const voiceStudioInstallLocator = new FileVoiceStudioInstallLocator();
+const voiceStudioInstallManager = new VoiceStudioInstallManager(voiceStudioInstaller, { locator: voiceStudioInstallLocator });
 const server = createAppServer({ repository, root: APP_PATHS.projectRoot, youtube,
   thumbnailRoute: (req, res, path, method, body, json) =>
     routeThumbnails(thumbnails, req, res, path, method, body, json, fonts, sourceFrameService, contentPlans),
   voicevoxRoute: createVoicevoxRoute(voicevox),
-  ttsRoute: createTTSRoute(ttsProviders),
+  ttsRoute: createTTSRoute(ttsProviders, {
+    voiceStudioInstall: {
+      installer: voiceStudioInstaller,
+      manager: voiceStudioInstallManager,
+      locator: voiceStudioInstallLocator,
+      targetDirectory: join(APP_PATHS.data, 'voicestudio', 'installers'),
+    },
+  }),
   sourceFrameRoute: createSourceFrameRoute(sourceFrameService),
   contentPlanRoute: createContentPlanRoute(contentPlans, thumbnails),
 });

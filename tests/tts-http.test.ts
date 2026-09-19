@@ -82,3 +82,47 @@ test('generic TTS API returns structured provider and route errors', async t => 
   assert.equal(unknown.status, 404);
   assert.equal((await unknown.json()).error.code, 'NOT_FOUND');
 });
+
+test('VoiceStudio installation API requires explicit consent and keeps paths server-owned', async t => {
+  const registry = new TTSProviderRegistry();
+  const source = new SourceRepository(':memory:');
+  let resolveCalls = 0;
+  let installCalls = 0;
+  const location = { executablePath: 'C:\\Users\\tester\\AppData\\Local\\Programs\\VoiceStudio\\VoiceStudio.exe' };
+  const server = createAppServer({ repository: source, root: root(t), youtube: null, ttsRoute: createTTSRoute(registry, {
+    voiceStudioInstall: {
+      installer: { resolveLatestStable: async () => {
+        resolveCalls += 1;
+        return { version: 'v0.5.3', installer: { name: 'VoiceStudio-Electron-0.5.3-win-x64.exe', url: 'https://github.com/debpalash/VoiceStudio/releases/download/v0.5.3/VoiceStudio-Electron-0.5.3-win-x64.exe', sha256: 'a'.repeat(64) }, checksumManifest: { name: 'SHA256SUMS-Windows.x64.txt', url: 'https://github.com/debpalash/VoiceStudio/releases/download/v0.5.3/SHA256SUMS-Windows.x64.txt' } };
+      } },
+      manager: { install: async () => {
+        installCalls += 1;
+        return { installer: { path: 'D:\\data\\installer.exe', bytes: 12, sha256: 'a'.repeat(64), downloaded: true }, installation: location };
+      } },
+      locator: { find: async () => location },
+      targetDirectory: 'D:\\coding\\Short-auto\\data\\voicestudio\\installers',
+    },
+  }) });
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(async () => { await new Promise<void>(resolve => server.close(() => resolve())); source.close(); });
+  const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  const request = (path: string, body?: unknown) => fetch(base + path, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+  });
+
+  const status = await fetch(`${base}/api/tts/providers/voicestudio/installation`);
+  assert.deepEqual((await status.json()).data, { installed: true, executablePath: location.executablePath });
+  const denied = await request('/api/tts/providers/voicestudio/install', { consent: false });
+  assert.equal(denied.status, 400);
+  assert.equal(resolveCalls, 0);
+  assert.equal(installCalls, 0);
+  const pathOverride = await request('/api/tts/providers/voicestudio/install', { consent: true, targetDirectory: 'C:\\unsafe' });
+  assert.equal(pathOverride.status, 400);
+  assert.equal(resolveCalls, 0);
+  assert.equal(installCalls, 0);
+  const installed = await request('/api/tts/providers/voicestudio/install', { consent: true });
+  assert.equal(installed.status, 201);
+  assert.deepEqual((await installed.json()).data.installation, { installed: true, executablePath: location.executablePath });
+  assert.equal(resolveCalls, 1);
+  assert.equal(installCalls, 1);
+});

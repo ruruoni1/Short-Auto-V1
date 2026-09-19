@@ -202,3 +202,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - FFmpeg/FFprobe는 PATH에서 확인됐다.
 - 현재 검증 시점에는 VoiceVox(`127.0.0.1:50021`)와 VoiceStudio(`127.0.0.1:3900`) 프로세스 및 health/voice endpoint가 모두 실행되지 않았다.
 - 외부 엔진을 임의로 시작하거나 종료하지 않았으며, 실제 음성 목록·WAV 합성 품질은 엔진 실행 후 재검증해야 한다.
+
+## 2026-09-20 VoiceStudio 명시적 설치 API 완료
+
+- `/api/tts/providers/voicestudio/installation`으로 설치 감지 상태를 조회하고, `/api/tts/providers/voicestudio/install`에 `{ "consent": true }`를 보낼 때만 공식 stable Release 탐지·checksum 다운로드·표시형 설치를 실행하도록 연결했다.
+- 설치 대상 디렉터리는 서버 설정으로 고정하고 요청의 `targetDirectory` 주입을 거부한다. 앱 시작 시 자동 설치하거나 silent flag를 사용하지 않는다.
+- 검증: TTS HTTP 테스트 3/3, 전체 `npm test` 443/443, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 설치는 사용자의 명시적 실행 요청 전까지 수행하지 않았다.
+- 다음 단위는 설치 후 VoiceStudio 실행 파일의 backend 시작 계약을 확인하고, 확인된 실행 인자만 process manager에 연결하는 것이다.
