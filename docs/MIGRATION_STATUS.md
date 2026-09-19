@@ -196,3 +196,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - HTTP 합성 입력은 strict schema로 검증하고 `outputPath`를 허용하지 않아 서버 파일 경로를 외부 요청에 노출하지 않는다. 합성 응답은 `audio/wav`와 provider/engine 헤더를 반환한다.
 - 검증: TTS HTTP 테스트 2/2, 전체 `npm test` 442/442, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 VoiceStudio backend 연결·음성 목록·합성은 아직 사용자 환경 검증 대상이다.
 - 다음 단위는 실제 VoiceStudio backend가 실행된 사용자 환경에서 health·voice 목록·WAV 합성을 확인하고, 필요하면 UI 연결을 진행하는 것이다.
+
+## 2026-09-20 로컬 음성 엔진 실행 상태 확인
+
+- FFmpeg/FFprobe는 PATH에서 확인됐다.
+- 현재 검증 시점에는 VoiceVox(`127.0.0.1:50021`)와 VoiceStudio(`127.0.0.1:3900`) 프로세스 및 health/voice endpoint가 모두 실행되지 않았다.
+- 외부 엔진을 임의로 시작하거나 종료하지 않았으며, 실제 음성 목록·WAV 합성 품질은 엔진 실행 후 재검증해야 한다.
