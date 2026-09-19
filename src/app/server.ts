@@ -138,6 +138,7 @@ export function createAppServer(options: ServerOptions) {
       if (method === 'GET' && job) { json(res, 200, { data: repo.getJob(job[1]!) }); return; }
       const files: Record<string, [string, string]> = {
         '/studio': ['studio.html', 'text/html'], '/studio.js': ['studio.js', 'text/javascript'], '/studio.css': ['studio.css', 'text/css'],
+        '/planner': ['planner.html', 'text/html'], '/planner.js': ['planner.js', 'text/javascript'], '/planner.css': ['planner.css', 'text/css'],
         '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/styles.css': ['styles.css', 'text/css'],
       };
       const file = files[path];

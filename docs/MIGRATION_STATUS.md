@@ -289,3 +289,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `POST /api/auto-planner/plan`을 추가해 앱 서버가 SourceTimeline·선택적 Asset registry·기존 잠금 Scene을 받아 Planner 결과와 진단을 반환하도록 연결했다.
 - 잘못된 입력은 `400 PLANNER_INVALID`와 구조화 진단으로 반환하고, 외부 API·파일·TTS 엔진을 호출하지 않는다. 기존 로컬 Host/Origin/JSON 검증 경계를 그대로 적용한다.
 - 검증: AutoPlanner core/API 6/6, `npm run typecheck`, `npm run build` 통과. 다음 단위는 이 API 결과를 Review Editor의 제작 계획 검토 화면에 연결하는 것이다.
+
+## 2026-09-20 AutoPlanner 검토 화면 연결 완료
+
+- `/planner` 로컬 화면을 추가해 SourceTimeline JSON과 선택적 잠금 Scene을 입력하고 `POST /api/auto-planner/plan` 결과를 검토할 수 있게 했다. 장면 유형·시간·문구·신뢰도·잠금 보존 상태를 표로 표시하고 오류·경고 진단을 분리한다.
+- 메인 작업 공간에 `자동 장면 계획` 링크를 추가했고, 정적 파일은 기존 same-origin/CSP 경계를 그대로 사용한다. 이 화면은 계획과 검토만 수행하며 파일·렌더·게시를 자동 실행하지 않는다.
+- 검증: `node --check src/app/web/planner.js`, 전체 `npm test` 453/453, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
+- 다음 자동 단위는 검토 승인 이후에만 Preview 입력으로 넘길 수 있는 Review Editor 연계이며, VoiceBox/VOICEVOX는 계속 제외한다.
