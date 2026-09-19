@@ -358,3 +358,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 게시 전 Core 최종 렌더 승인·revision, ContentPlan `READY`, SourceFrame 최신 `reviewed` 권리 상태, 연결된 ThumbnailProject export와 파일 해시, 프로젝트 루트 내부 MP4 경로·symlink 탈출을 검증한다. 검수 실패 시 주입된 Publisher를 호출하지 않는다.
 - 성공·실패·예외 결과는 기존 `Publisher`/`PublishingResult` 계약으로 매핑하며 외부 오류 메시지와 토큰을 노출하지 않는다. 실제 YouTube 인증·업로드와 Desktop 패키징은 다음 단계로 남긴다.
 - 검증: 집중 테스트 7/7, 전체 `npm test` 474/474, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 MP4 디코드는 기존 Remotion·FFmpeg 검증 증거를 입력으로만 사용했으며 VoiceBox/VOICEVOX는 실행하지 않았다.
+
+## 2026-09-20 Desktop Workspace·Release 계약 완료
+
+- `deriveDesktopWorkspaceLayout`을 추가해 설치 경로와 사용자 Workspace를 분리하고, `projects`, `presets`, `cache`, `exports` 하위 경로를 플랫폼 경로 규칙으로 결정한다. 디렉터리 생성이나 파일 쓰기는 수행하지 않는다.
+- `validateReleaseManifest`를 추가해 Stable/Beta 채널, semantic version과 `v<version>` 태그, 안전한 상대 artifact 경로, 선택적 SHA-256을 검증하고 traversal·절대 경로·secret-like 필드를 차단한다. Electron·Installer·GitHub 네트워크 동작은 아직 연결하지 않았다.
+- 공개 Core export와 회귀 테스트를 추가했다. 검증: Desktop 집중 테스트 5/5, 전체 `npm test` 479/479, `npm run typecheck`, `npm run build`, `git diff --check` 통과. VoiceBox/VOICEVOX는 실행하지 않았다.

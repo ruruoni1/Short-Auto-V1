@@ -8,3 +8,4 @@ export * from './asset.js';
 export * from './theme-motion.js';
 export * from './auto-planner.js';
 export * from './scene-plan-adapter.js';
+export * from './app/desktop/contract.js';
