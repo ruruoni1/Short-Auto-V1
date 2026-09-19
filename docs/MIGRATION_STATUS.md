@@ -172,3 +172,11 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 설치가 성공 코드로 끝나도 설치 실행 파일이 감지되지 않으면 완료로 처리하지 않는다. silent flag는 사용하지 않는다.
 - 검증: install manager 테스트 3/3, 전체 `npm test` 434/434, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
 - 다음 단위는 설치된 VoiceStudio executable에서 backend를 안전하게 시작하고 `/health` readiness를 기다리는 process manager다.
+
+## 2026-09-20 VoiceStudio backend process manager 기반
+
+- `src/app/voicestudio/process-manager.ts`에 external attach와 nihon-managed spawn을 분리하는 process manager를 추가했다.
+- 이미 backend가 `ready` 또는 `starting`이면 spawn하지 않고 `external`로 attach한다. backend가 없을 때만 호출자가 지정한 executable/args를 `shell:false`, `windowsHide:true`로 실행하고 `/health`가 `ready`가 될 때까지 기다린다.
+- readiness timeout 시 시작한 child만 종료하고, `stop()`도 manager가 소유한 child만 종료한다. VoiceStudio 내부 실행 명령과 포트는 하드코딩하지 않았다.
+- 검증: process manager 테스트 3/3, 전체 `npm test` 437/437, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
+- 다음 단위는 이 manager를 VoiceStudioProvider와 앱 서버/UI에 연결해 상태·voice 목록·실제 synthesis를 제공하는 통합이다.
