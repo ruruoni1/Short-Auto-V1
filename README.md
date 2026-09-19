@@ -2,7 +2,7 @@
 
 프로젝트 루트는 `D:\coding\Short-auto`입니다. [이관 v3](docs/NIHON_ZUPZUP_CODEX_MIGRATION_v3_2026-09-09.md)를 먼저 읽고 지정된 docs 루트 최신 문서만 구현 기준으로 사용합니다. `docs/archive`는 활성 기준에서 제외합니다.
 
-현재 순서는 기존 구현 마이그레이션 → Official Clip Library → Thumbnail Studio → VOICEVOX TTS입니다. [진행 기록](docs/MIGRATION_STATUS.md)에서 검증 상태를 관리합니다. VOICEVOX 백엔드와 UI 연결은 완료되었고 실제 엔진 청취 검증은 별도입니다.
+현재 순서는 기존 구현 마이그레이션 → Official Clip Library → Thumbnail Studio → AutoPlanner → Review/Content/Publishing 연계입니다. [진행 기록](docs/MIGRATION_STATUS.md)에서 검증 상태를 관리합니다. 사용자 결정에 따라 VoiceBox/VOICEVOX는 자동 진행 범위에서 제외하고 기존 호환 코드는 보존합니다. 로컬 TTS 미리듣기는 검증된 VoiceStudio provider를 사용합니다.
 
 Node.js/TypeScript 공통 데이터 계약 패키지 (`@short-auto/core`, 0.1.0).
 React/Remotion/Electron 후속 모듈이 같은 Schema와 타입을 가져다 사용합니다.

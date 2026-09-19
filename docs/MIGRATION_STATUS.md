@@ -275,3 +275,11 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - VoiceStudio 미리듣기 UI에 언어 선택(`자동 감지`, `한국어`, `일본어`, `영어`)을 추가했다. `자동 감지`는 기존 요청 계약을 유지하고, 명시 언어는 TTS API의 `language` 필드로 전달한다.
 - OmniVoice 선택 시 일본어를 명시한 Short-auto 요청이 HTTP 200과 `X-TTS-Engine: omnivoice`를 반환했다. 응답 WAV는 253,484 bytes, 24kHz mono PCM, 5.28초였고 FFmpeg decode 검사를 통과했다.
 - UI HTML의 `voicestudio-language` 요소와 API 경로를 실제 로컬 서버에서 확인했다. 전체 `npm test` 447/447, `npm run typecheck`, `npm run build`, `node --check src/app/web/app.js`, `git diff --check`가 통과했다.
+
+## 2026-09-20 VoiceBox 제외 및 AutoPlanner MVP 완료
+
+- 사용자 결정에 따라 VoiceBox/VOICEVOX 엔진 검증·설치·추가 기능은 자동 진행 범위에서 제외한다. 기존 VoiceVox 호환 코드와 테스트는 삭제하지 않고 보존하며, 현재 로컬 TTS 경로는 검증된 VoiceStudio provider를 사용한다.
+- `planScenes`를 추가해 SourceTimeline 자막을 deterministic Scene으로 분류한다. HOOK/CONCEPT/COMPARE/RELATION/QUOTE_ANALYSIS/KEYWORD/QUESTION/RECAP/EXPLAIN 우선 규칙, 1~7어절 mainText, visual strategy, confidence와 저신뢰 review warning을 제공한다.
+- `locked=true` 기존 Scene은 재실행 시 원문·문구·ID를 보존하고, 잘못된 자막 범위·중복 잠금·잘못된 입력은 명확한 진단으로 중단한다. Planner는 파일·Asset·외부 API를 생성하거나 수정하지 않는다.
+- 검증: AutoPlanner 4/4, 전체 `npm test` 451/451, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 공개 `@short-auto/core` export에 `planScenes`를 추가했다.
+- 다음 자동 단위는 Planner 결과를 Review Editor/ContentPlan 흐름에서 선택·검토할 수 있도록 연결하는 것이다. VoiceBox/VOICEVOX 작업은 재개하지 않는다.

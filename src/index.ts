@@ -6,3 +6,4 @@ export * from './timeline.js';
 export * from './scene.js';
 export * from './asset.js';
 export * from './theme-motion.js';
+export * from './auto-planner.js';
