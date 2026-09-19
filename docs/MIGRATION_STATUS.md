@@ -331,3 +331,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `POST /api/auto-planner/preview-input` 성공 응답에 reviewed input을 기준으로 한 `resolveAssets` 결과를 `data.assets.plan`과 `data.assets.diagnostics`로 추가했다. 기존 `data.input`, `data.diagnostics`와 `SCENE_PLAN_INVALID` 오류 envelope는 유지한다.
 - `/planner`는 Asset readiness, `fileVerification`, `renderVerification`, Asset diagnostics를 읽기 전용 textContent/pre로 표시한다. Asset resolver는 파일·렌더·TTS·게시를 실행하지 않으며 검증 상태는 `not_performed`로 노출된다.
 - 검증: route targeted test, `node --check src/app/web/planner.js`, `npm run typecheck`, `npm test`, `npm run build`, `git diff --check`.
+
+## 2026-09-20 Reviewed Scene Plan Remotion Preview 경계 완료
+
+- `prepareReviewedScenePreview(input, handoff, pack, captionDisplayPolicy?)`를 추가해 reviewed handoff를 검증한 뒤 기존 `prepareScenePreview`에 전달한다. 실패 시 `SceneRenderError`의 구조화 diagnostics만 반환하며 partial runtime을 만들지 않는다.
+- 기존 Preview 계획·CaptionDisplayPolicy·SceneRender 동작은 보존하고, input/handoff 불변성·렌더 미지원 Scene 진단을 회귀 테스트로 고정했다. 승인·최종 렌더·FFmpeg·TTS·게시를 실행하지 않는다.
+- 검증: reviewed Preview adapter 5/5, 전체 `npm test` 467/467, `npm run typecheck`, `npm run build`, 공개 `@short-auto/core/render` import, `git diff --check` 통과.
+- 다음 자동 단위는 실제 Remotion Composition/MP4 검증이며, 미디어 파일·Asset readiness와 함께 별도 확인한다. VoiceBox/VOICEVOX는 계속 제외한다.
