@@ -364,3 +364,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `deriveDesktopWorkspaceLayout`을 추가해 설치 경로와 사용자 Workspace를 분리하고, `projects`, `presets`, `cache`, `exports` 하위 경로를 플랫폼 경로 규칙으로 결정한다. 디렉터리 생성이나 파일 쓰기는 수행하지 않는다.
 - `validateReleaseManifest`를 추가해 Stable/Beta 채널, semantic version과 `v<version>` 태그, 안전한 상대 artifact 경로, 선택적 SHA-256을 검증하고 traversal·절대 경로·secret-like 필드를 차단한다. Electron·Installer·GitHub 네트워크 동작은 아직 연결하지 않았다.
 - 공개 Core export와 회귀 테스트를 추가했다. 검증: Desktop 집중 테스트 5/5, 전체 `npm test` 479/479, `npm run typecheck`, `npm run build`, `git diff --check` 통과. VoiceBox/VOICEVOX는 실행하지 않았다.
+
+## 2026-09-20 Desktop 업데이트 판정 정책 완료
+
+- `decideDesktopUpdate`를 추가해 네트워크 없이 현재 semantic version·채널과 검증된 ReleaseManifest를 비교한다. Stable은 stable release만, Beta는 stable과 beta release를 고려하고 prerelease 우선순위를 반영한다.
+- 동일·낮은 버전, 채널 불일치, 잘못된 현재 버전/manifest는 파일·설치·네트워크 부작용 없이 구조화된 결정과 진단으로 반환한다. Electron·Installer·GitHub API 연결은 아직 하지 않았다.
+- 검증: Desktop 업데이트 집중 테스트 5/5, 전체 `npm test` 484/484, `npm run typecheck`, `npm run build`, `git diff --check` 통과. VoiceBox/VOICEVOX는 실행하지 않았다.
