@@ -15,6 +15,7 @@ export interface ServerOptions {
   youtube: YouTubeClient | null;
   download?: typeof downloadSelectedClip;
   thumbnailRoute?: AppRoute;
+  ttsRoute?: AppRoute;
   voicevoxRoute?: AppRoute;
   sourceFrameRoute?: AppRoute;
   contentPlanRoute?: AppRoute;
@@ -78,6 +79,7 @@ export function createAppServer(options: ServerOptions) {
         json(res, 200, { data: { youtubeConfigured: options.youtube !== null } }); return;
       }
       if (options.thumbnailRoute && await options.thumbnailRoute(req, res, path, method, body, json)) return;
+      if (options.ttsRoute && await options.ttsRoute(req, res, path, method, body, json)) return;
       if (options.voicevoxRoute && await options.voicevoxRoute(req, res, path, method, body, json)) return;
       if (options.sourceFrameRoute && await options.sourceFrameRoute(req, res, path, method, body, json)) return;
       if (options.contentPlanRoute && await options.contentPlanRoute(req, res, path, method, body, json)) return;

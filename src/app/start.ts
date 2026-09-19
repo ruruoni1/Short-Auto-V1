@@ -17,6 +17,11 @@ import { SourceFrameService } from './source-frames/service.js';
 import { createSourceFrameRoute } from './source-frames/routes.js';
 import { ContentPlanRepository } from './content-plans/repository.js';
 import { createContentPlanRoute } from './content-plans/routes.js';
+import { TTSProviderRegistry } from './tts/registry.js';
+import { createTTSRoute } from './tts/routes.js';
+import { VoicevoxProvider } from './voicevox/provider.js';
+import { VoiceStudioClient } from './voicestudio/client.js';
+import { VoiceStudioProvider } from './voicestudio/provider.js';
 
 loadActiveDocuments();
 mkdirSync(APP_PATHS.data, { recursive: true });
@@ -31,10 +36,16 @@ const voicevox = new VoicevoxService(
   new VoicevoxClient(process.env.VOICEVOX_ENDPOINT ? { endpoint: process.env.VOICEVOX_ENDPOINT } : {}),
   new VoicevoxRepository(APP_PATHS.projectRoot),
 );
+const ttsProviders = new TTSProviderRegistry();
+ttsProviders.register(new VoicevoxProvider(voicevox));
+ttsProviders.register(new VoiceStudioProvider(new VoiceStudioClient(
+  process.env.VOICESTUDIO_ENDPOINT ? { endpoint: process.env.VOICESTUDIO_ENDPOINT } : {},
+)));
 const server = createAppServer({ repository, root: APP_PATHS.projectRoot, youtube,
   thumbnailRoute: (req, res, path, method, body, json) =>
     routeThumbnails(thumbnails, req, res, path, method, body, json, fonts, sourceFrameService, contentPlans),
   voicevoxRoute: createVoicevoxRoute(voicevox),
+  ttsRoute: createTTSRoute(ttsProviders),
   sourceFrameRoute: createSourceFrameRoute(sourceFrameService),
   contentPlanRoute: createContentPlanRoute(contentPlans, thumbnails),
 });

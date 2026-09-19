@@ -188,3 +188,11 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 기존 VoiceVox API와 UI는 변경하지 않았다. 아직 Provider registry를 앱 서버와 UI에 연결하지 않았으며, 실제 VoiceStudio backend 호출도 수행하지 않았다.
 - 검증: VoiceStudio Provider 테스트 3/3, 전체 `npm test` 440/440, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
 - 다음 단위는 TTS Provider registry를 앱 서버에 연결해 provider 상태·voice 목록·synthesis API를 노출하는 통합이다.
+
+## 2026-09-20 TTS Provider API 통합 완료
+
+- `src/app/tts/routes.ts`를 추가해 등록된 provider의 상태·voice 목록·WAV 합성 API를 `/api/tts/providers` 아래에 노출했다.
+- `start.ts`에서 기존 VoiceVox adapter와 VoiceStudio provider를 하나의 registry에 등록했다. 기존 `/api/voicevox/*` API는 호환성을 유지한다.
+- HTTP 합성 입력은 strict schema로 검증하고 `outputPath`를 허용하지 않아 서버 파일 경로를 외부 요청에 노출하지 않는다. 합성 응답은 `audio/wav`와 provider/engine 헤더를 반환한다.
+- 검증: TTS HTTP 테스트 2/2, 전체 `npm test` 442/442, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 VoiceStudio backend 연결·음성 목록·합성은 아직 사용자 환경 검증 대상이다.
+- 다음 단위는 실제 VoiceStudio backend가 실행된 사용자 환경에서 health·voice 목록·WAV 합성을 확인하고, 필요하면 UI 연결을 진행하는 것이다.
