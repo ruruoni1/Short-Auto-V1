@@ -209,3 +209,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 설치 대상 디렉터리는 서버 설정으로 고정하고 요청의 `targetDirectory` 주입을 거부한다. 앱 시작 시 자동 설치하거나 silent flag를 사용하지 않는다.
 - 검증: TTS HTTP 테스트 3/3, 전체 `npm test` 443/443, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 설치는 사용자의 명시적 실행 요청 전까지 수행하지 않았다.
 - 다음 단위는 설치 후 VoiceStudio 실행 파일의 backend 시작 계약을 확인하고, 확인된 실행 인자만 process manager에 연결하는 것이다.
+
+## 2026-09-20 VoiceStudio 설치 UI 연결 완료
+
+- 기존 VOICEVOX 화면에 VoiceStudio 설치 상태와 설치 버튼을 추가했다. 설치 버튼은 확인 대화상자와 `{ "consent": true }` 요청을 거쳐야 실행된다.
+- 설치 후 VoiceStudio를 자동 실행하지 않고 사용자가 앱을 열도록 안내한다. 설치되지 않은 상태에서도 기존 VOICEVOX 작업 화면은 계속 사용할 수 있다.
+- 검증: `node --check src/app/web/app.js`, 로컬 서버 `/` 및 설치 상태 API 200 응답, 전체 `npm test` 443/443, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
+- 공식 VoiceStudio 문서상 Electron 앱이 backend를 관리하고 실행 인자는 공개된 안정 계약으로 확인되지 않아, 임의의 executable spawn 연결은 보류한다. [공식 Windows 설치 문서](https://github.com/debpalash/VoiceStudio/blob/main/docs/install/windows.md)

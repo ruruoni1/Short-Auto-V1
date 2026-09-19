@@ -205,6 +205,8 @@ dialog .form-error { margin: 0 26px; }
 .voicevox-content-id { margin-top: 14px; }
 .voicevox-audio { width: 100%; margin-top: 18px; }
 .voicevox-result { margin-top: 14px; padding: 11px 12px; border-radius: 8px; color: var(--accent-dark); background: var(--accent-soft); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.voicestudio-install-card { margin-top: 18px; }
+.voicestudio-install-card .voicevox-status { margin: 0; }
 
 :focus-visible { outline: 3px solid rgba(38,113,91,.25); outline-offset: 2px; }
 @keyframes reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }

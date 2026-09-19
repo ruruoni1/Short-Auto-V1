@@ -6,6 +6,7 @@ const state = {
   channelJobs: new Map(),
   lastDetailTrigger: null,
   voicevox: { voices: [], selectedSpeakerUuid: '', selectedStyleId: '', profile: null, audioUrl: null, busy: false },
+  voicestudio: { installed: false, busy: false },
 };
 
 const ui = {
@@ -38,6 +39,11 @@ const ui = {
     text: document.querySelector('#voicevox-text'), contentId: document.querySelector('#voicevox-content-id'), preview: document.querySelector('#voicevox-preview'), generate: document.querySelector('#voicevox-generate'), audio: document.querySelector('#voicevox-audio'), result: document.querySelector('#voicevox-result'),
     params: { speedScale: document.querySelector('#voicevox-speed'), pitchScale: document.querySelector('#voicevox-pitch'), intonationScale: document.querySelector('#voicevox-intonation'), volumeScale: document.querySelector('#voicevox-volume') },
     values: { speedScale: document.querySelector('#voicevox-speed-value'), pitchScale: document.querySelector('#voicevox-pitch-value'), intonationScale: document.querySelector('#voicevox-intonation-value'), volumeScale: document.querySelector('#voicevox-volume-value') },
+  },
+  voicestudio: {
+    status: document.querySelector('#voicestudio-install-status'), dot: document.querySelector('#voicestudio-install-dot'),
+    title: document.querySelector('#voicestudio-install-title-text'), copy: document.querySelector('#voicestudio-install-copy'),
+    install: document.querySelector('#voicestudio-install'), help: document.querySelector('#voicestudio-install-help'),
   },
 };
 
@@ -879,6 +885,54 @@ async function loadVoicevox() {
   }
 }
 
+function renderVoiceStudioInstall() {
+  const installed = state.voicestudio.installed;
+  ui.voicestudio.install.disabled = installed || state.voicestudio.busy;
+  ui.voicestudio.install.textContent = installed ? '설치됨' : state.voicestudio.busy ? '설치 중…' : 'VoiceStudio 설치';
+}
+
+function setVoiceStudioInstallStatus(kind, title, copy) {
+  ui.voicestudio.dot.className = `status-dot ${kind === 'ready' ? 'is-good' : kind === 'loading' ? '' : 'is-bad'}`;
+  ui.voicestudio.title.textContent = title;
+  ui.voicestudio.copy.textContent = copy;
+}
+
+async function loadVoiceStudio() {
+  setVoiceStudioInstallStatus('loading', '설치 상태 확인 중', 'VoiceStudio 설치 여부를 확인하고 있습니다.');
+  try {
+    const payload = await request('/api/tts/providers/voicestudio/installation');
+    state.voicestudio.installed = Boolean(payload?.data?.installed);
+    if (state.voicestudio.installed) {
+      setVoiceStudioInstallStatus('ready', 'VoiceStudio 설치됨', 'VoiceStudio를 실행하면 로컬 backend에 연결할 수 있습니다.');
+      ui.voicestudio.help.textContent = '앱을 실행한 뒤 연결 상태를 다시 확인하세요.';
+    } else {
+      setVoiceStudioInstallStatus('unavailable', 'VoiceStudio 미설치', '필요할 때 공식 Windows x64 설치 파일로 설치할 수 있습니다.');
+    }
+  } catch (error) {
+    setVoiceStudioInstallStatus('unavailable', '설치 상태를 확인할 수 없습니다', errorMessage(error));
+  } finally { renderVoiceStudioInstall(); }
+}
+
+async function installVoiceStudio() {
+  if (state.voicestudio.busy || state.voicestudio.installed) return;
+  if (!window.confirm('공식 VoiceStudio 설치 파일을 다운로드하고 설치 프로그램을 실행할까요?')) return;
+  state.voicestudio.busy = true;
+  renderVoiceStudioInstall();
+  setVoiceStudioInstallStatus('loading', 'VoiceStudio 설치 중', 'Release 확인, checksum 검증, 설치 프로그램 실행을 진행합니다.');
+  try {
+    const payload = await request('/api/tts/providers/voicestudio/install', { method: 'POST', body: { consent: true } });
+    state.voicestudio.installed = Boolean(payload?.data?.installation?.installed);
+    setVoiceStudioInstallStatus('ready', 'VoiceStudio 설치 완료', 'VoiceStudio를 실행한 뒤 연결 상태를 다시 확인하세요.');
+    ui.voicestudio.help.textContent = '설치가 완료되었습니다. VoiceStudio를 실행하면 backend를 연결합니다.';
+    showToast('VoiceStudio 설치가 완료되었습니다.');
+  } catch (error) {
+    setVoiceStudioInstallStatus('unavailable', 'VoiceStudio 설치 실패', errorMessage(error));
+  } finally {
+    state.voicestudio.busy = false;
+    renderVoiceStudioInstall();
+  }
+}
+
 async function voicevoxAudio(path, body) {
   let response;
   try { response = await fetch(path, { method: 'POST', headers: { Accept: 'audio/wav', 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
@@ -927,6 +981,7 @@ async function saveVoicevoxProfile() {
 function bindEvents() {
   ui.navButtons.forEach((button) => button.addEventListener('click', () => setView(button.dataset.view)));
   ui.voicevox.retry.addEventListener('click', loadVoicevox);
+  ui.voicestudio.install.addEventListener('click', installVoiceStudio);
   ui.voicevox.speaker.addEventListener('change', () => { state.voicevox.selectedSpeakerUuid = ui.voicevox.speaker.value; state.voicevox.selectedStyleId = ''; renderVoicevox(); });
   ui.voicevox.style.addEventListener('change', () => { state.voicevox.selectedStyleId = ui.voicevox.style.value; renderVoicevox(); });
   ui.voicevox.profileName.addEventListener('input', renderVoicevox);
@@ -952,6 +1007,7 @@ async function start() {
   renderSkeletons(ui.channelList, 3);
   await Promise.all([loadHealth(), loadChannels(), loadClips()]);
   loadVoicevox();
+  loadVoiceStudio();
 }
 
 start();
