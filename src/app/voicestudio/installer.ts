@@ -1,3 +1,7 @@
+import { createHash } from 'node:crypto';
+import { createReadStream } from 'node:fs';
+import { mkdir, open, rename, rm, stat } from 'node:fs/promises';
+import path from 'node:path';
 import { z } from 'zod';
 import { VoiceStudioError } from './models.js';
 
@@ -26,6 +30,21 @@ export interface VoiceStudioInstallerOptions {
   fetch?: typeof fetch;
   apiUrl?: string;
   timeoutMs?: number;
+}
+
+export interface VoiceStudioDownloadOptions {
+  targetDirectory: string;
+  fetch?: typeof fetch;
+  timeoutMs?: number;
+  maxBytes?: number;
+  signal?: AbortSignal;
+}
+
+export interface VoiceStudioDownloadedInstaller {
+  path: string;
+  bytes: number;
+  sha256: string;
+  downloaded: boolean;
 }
 
 function githubUrl(value: string, code: string): string {
@@ -84,6 +103,78 @@ export class VoiceStudioInstaller {
     };
   }
 
+  async downloadVerifiedInstaller(
+    release: VoiceStudioRelease,
+    options: VoiceStudioDownloadOptions,
+  ): Promise<VoiceStudioDownloadedInstaller> {
+    const fileName = path.basename(release.installer.name);
+    if (fileName !== release.installer.name || fileName.length === 0 || fileName.includes('..')) {
+      throw new VoiceStudioError('INSTALLER_NAME_INVALID', 'VoiceStudio 설치 파일 이름이 올바르지 않습니다.', 'configuration', 400, false);
+    }
+    const directory = path.resolve(options.targetDirectory);
+    const finalPath = path.join(directory, fileName);
+    const partPath = `${finalPath}.part`;
+    const expected = release.installer.sha256.toLowerCase();
+    if (!/^[a-f0-9]{64}$/.test(expected)) {
+      throw new VoiceStudioError('CHECKSUM_INVALID', 'VoiceStudio 설치 파일 SHA256 형식이 올바르지 않습니다.', 'configuration', 400, false);
+    }
+    const maxBytes = z.number().int().positive().max(2_000_000_000).parse(options.maxBytes ?? 1_000_000_000);
+    await mkdir(directory, { recursive: true });
+    const existing = await this.#hashFileIfPresent(finalPath, maxBytes);
+    if (existing && existing.sha256 === expected) return { path: finalPath, ...existing, downloaded: false };
+    if (existing) await rm(finalPath, { force: true });
+    await rm(partPath, { force: true });
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), z.number().int().min(100).max(600_000).parse(options.timeoutMs ?? 300_000));
+    const abort = () => controller.abort();
+    options.signal?.addEventListener('abort', abort, { once: true });
+    let completed = false;
+    try {
+      const response = await this.#fetchDownload(release.installer.url, controller.signal, options.fetch ?? this.#fetch);
+      const declared = Number(response.headers.get('content-length') ?? 0);
+      if (Number.isFinite(declared) && declared > maxBytes) throw new VoiceStudioError('DOWNLOAD_TOO_LARGE', 'VoiceStudio 설치 파일이 허용된 크기를 초과합니다.', 'invalid_response', 502, false);
+      if (!response.body) throw new VoiceStudioError('DOWNLOAD_EMPTY', 'VoiceStudio 설치 파일 응답 본문이 비어 있습니다.', 'invalid_response', 502, true);
+      const file = await open(partPath, 'w');
+      const hash = createHash('sha256');
+      let bytes = 0;
+      try {
+        const reader = response.body.getReader();
+        while (true) {
+          const chunk = await reader.read();
+          if (chunk.done) break;
+          bytes += chunk.value.byteLength;
+          if (bytes > maxBytes) {
+            await reader.cancel();
+            throw new VoiceStudioError('DOWNLOAD_TOO_LARGE', 'VoiceStudio 설치 파일이 허용된 크기를 초과합니다.', 'invalid_response', 502, false);
+          }
+          hash.update(chunk.value);
+          await file.write(chunk.value);
+        }
+      } finally {
+        await file.close();
+      }
+      const actual = hash.digest('hex');
+      if (actual !== expected) throw new VoiceStudioError('CHECKSUM_MISMATCH', 'VoiceStudio 설치 파일 SHA256 검증에 실패했습니다.', 'invalid_response', 502, false);
+      await rename(partPath, finalPath);
+      completed = true;
+      return { path: finalPath, bytes, sha256: actual, downloaded: true };
+    } catch (error) {
+      if (error instanceof VoiceStudioError) throw error;
+      throw new VoiceStudioError(
+        controller.signal.aborted ? 'DOWNLOAD_CANCELLED' : 'DOWNLOAD_FAILED',
+        controller.signal.aborted ? 'VoiceStudio 설치 파일 다운로드가 취소되었습니다.' : 'VoiceStudio 설치 파일 다운로드에 실패했습니다.',
+        'unavailable',
+        503,
+        true,
+      );
+    } finally {
+      clearTimeout(timer);
+      options.signal?.removeEventListener('abort', abort);
+      if (!completed) await rm(partPath, { force: true });
+    }
+  }
+
   async #request(url: string, accept: string): Promise<Response> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.#timeoutMs);
@@ -114,5 +205,32 @@ export class VoiceStudioInstaller {
     } finally {
       clearTimeout(timer);
     }
+  }
+
+  async #fetchDownload(url: string, signal: AbortSignal, fetcher: typeof fetch): Promise<Response> {
+    const response = await fetcher(url, { method: 'GET', headers: { Accept: 'application/octet-stream', 'User-Agent': 'Short-auto/voice-studio-installer' }, signal });
+    if (!response.ok) throw new VoiceStudioError(
+      'DOWNLOAD_HTTP_ERROR',
+      `VoiceStudio 설치 파일 요청이 HTTP ${response.status}로 실패했습니다.`,
+      'http',
+      502,
+      response.status >= 500,
+      response.status,
+    );
+    return response;
+  }
+
+  async #hashFileIfPresent(filePath: string, maxBytes: number): Promise<{ bytes: number; sha256: string } | undefined> {
+    let size: number;
+    try { size = (await stat(filePath)).size; }
+    catch { return undefined; }
+    if (size > maxBytes) throw new VoiceStudioError('DOWNLOAD_TOO_LARGE', '기존 VoiceStudio 설치 파일이 허용된 크기를 초과합니다.', 'invalid_response', 502, false);
+    const hash = createHash('sha256');
+    let bytes = 0;
+    for await (const chunk of createReadStream(filePath)) {
+      bytes += chunk.length;
+      hash.update(chunk);
+    }
+    return { bytes, sha256: hash.digest('hex') };
   }
 }

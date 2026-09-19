@@ -157,3 +157,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 실제 다운로드·설치·silent flag 실행은 아직 수행하지 않는다. 설치 동의, `.part` 다운로드, checksum 비교 후 실행, 설치 완료 감지는 다음 단위다.
 - 검증: installer resolver 테스트 3/3, 전체 `npm test` 429/429, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
 - 다음 단위는 사용자 동의 후 checksum 검증 다운로드와 설치 완료 감지다. VoiceStudio 바이너리는 저장소에 커밋하지 않는다.
+
+## 2026-09-20 VoiceStudio 검증 다운로드 기반
+
+- `VoiceStudioInstaller.downloadVerifiedInstaller`를 추가했다. 대상 파일을 `.part`로 스트리밍하고, 최대 크기·timeout·취소·HTTP 오류를 처리한 뒤 SHA256 일치 시에만 최종 이름으로 원자적 rename한다.
+- checksum 불일치·실패 시 부분 파일을 제거하며, 이미 검증된 동일 파일은 재사용한다. installer 실행이나 외부 프로그램 설치는 이 단위에서 수행하지 않는다.
+- 검증: VoiceStudio installer 테스트 5/5, 전체 `npm test` 431/431, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
+- 다음 단위는 명시적 사용자 동의 이후 installer 실행과 설치 완료 감지이며, silent install 옵션은 upstream 확인 전 하드코딩하지 않는다.
