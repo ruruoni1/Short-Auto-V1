@@ -311,3 +311,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 이 어댑터는 Preview 입력 변환만 수행하며 승인·최종 렌더·게시·TTS 실행을 수행하지 않는다. VoiceBox/VOICEVOX는 계속 제외한다.
 - 검증: adapter 7/7, 전체 `npm test` 460/460, `npm run typecheck`, `npm run build`, 공개 export import, `git diff --check` 통과.
 - 다음 자동 단위는 이 Preview 입력을 Review Editor 화면에서 실제 미리보기 호출로 연결하는 작업이다.
+
+## 2026-09-20 Reviewed Scene Plan 로컬 API 통합 완료
+
+- `POST /api/auto-planner/preview-input`을 추가해 `input`과 version 1 reviewed handoff를 Core adapter에 전달한다. 성공은 `{ data: { input, diagnostics } }`, 실패는 `SCENE_PLAN_INVALID`와 구조화 diagnostics를 반환한다.
+- 기존 Host/Origin/JSON 요청 검증 경계를 유지하고 파일·렌더·TTS·게시를 실행하지 않는다. malformed JSON과 adapter 실패도 안정된 오류 envelope로 반환한다.
+- 검증: AutoPlanner/Preview API 4개, 전체 `npm test` 462/462, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
+- 다음 자동 단위는 Review Editor에서 이 Preview API를 호출하고 결과를 실제 Preview 준비 상태로 표시하는 UI 연계다. VoiceBox/VOICEVOX는 계속 제외한다.

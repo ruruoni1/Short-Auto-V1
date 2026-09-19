@@ -18,6 +18,7 @@ import { createSourceFrameRoute } from './source-frames/routes.js';
 import { ContentPlanRepository } from './content-plans/repository.js';
 import { createContentPlanRoute } from './content-plans/routes.js';
 import { createAutoPlannerRoute } from './auto-planner-routes.js';
+import { createScenePlanRoute } from './scene-plan-routes.js';
 import { TTSProviderRegistry } from './tts/registry.js';
 import { createTTSRoute } from './tts/routes.js';
 import { VoicevoxProvider } from './voicevox/provider.js';
@@ -66,6 +67,7 @@ const server = createAppServer({ repository, root: APP_PATHS.projectRoot, youtub
   sourceFrameRoute: createSourceFrameRoute(sourceFrameService),
   contentPlanRoute: createContentPlanRoute(contentPlans, thumbnails),
   autoPlannerRoute: createAutoPlannerRoute(),
+  scenePlanRoute: createScenePlanRoute(),
 });
 const port = Number(process.env.SHORT_AUTO_PORT ?? 4310);
 if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid SHORT_AUTO_PORT');
