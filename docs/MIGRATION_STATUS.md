@@ -351,3 +351,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `/planner`가 기존 ContentPlan 목록과 상세 상태를 불러오고, Preview 입력 준비가 끝난 경우에만 `DRAFT` 또는 `PLANNED` 계획을 `IN_PROGRESS`로 전환할 수 있게 연결했다.
 - READY/PUBLISHED 전환 UI는 추가하지 않았으며, SourceFrame `reviewed` 검수와 최종 상태 전환은 기존 서버 게이트가 계속 담당한다. ContentPlan 스키마와 ThumbnailProject 관계는 변경하지 않았다.
 - 검증: `node --check src/app/web/planner.js`, 전체 `npm test` 467/467, `npm run typecheck`, `npm run build`, `git diff --check` 통과. VoiceBox/VOICEVOX는 실행하지 않았다.
+
+## 2026-09-20 YouTube 게시 경계 검증 완료
+
+- `src/app/youtube/publishing.ts`에 주입형 `YouTubePublishingBoundary`를 추가했다. 실제 OAuth·YouTube 업로드·예약 호출 없이 로컬 dry-run 검수와 Publisher 결과 매핑만 수행한다.
+- 게시 전 Core 최종 렌더 승인·revision, ContentPlan `READY`, SourceFrame 최신 `reviewed` 권리 상태, 연결된 ThumbnailProject export와 파일 해시, 프로젝트 루트 내부 MP4 경로·symlink 탈출을 검증한다. 검수 실패 시 주입된 Publisher를 호출하지 않는다.
+- 성공·실패·예외 결과는 기존 `Publisher`/`PublishingResult` 계약으로 매핑하며 외부 오류 메시지와 토큰을 노출하지 않는다. 실제 YouTube 인증·업로드와 Desktop 패키징은 다음 단계로 남긴다.
+- 검증: 집중 테스트 7/7, 전체 `npm test` 474/474, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 MP4 디코드는 기존 Remotion·FFmpeg 검증 증거를 입력으로만 사용했으며 VoiceBox/VOICEVOX는 실행하지 않았다.
