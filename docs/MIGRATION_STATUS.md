@@ -388,3 +388,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `downloadGitHubArtifact`를 추가해 공식 GitHub HTTPS artifact를 주입된 fetch로 읽고, projectRoot 내부의 상대 destination·symlink 경계를 확인한 뒤 `.part` 파일에 기록한다.
 - 다운로드 bytes는 비어 있지 않은지·크기 제한·SHA-256을 확인한 뒤 원자적으로 교체한다. HTTP 실패·네트워크 예외·hash mismatch·경로 탈출 시 최종 파일과 partial 파일을 남기지 않는다.
 - 검증: artifact 다운로드 집중 테스트 5/5, 전체 `npm test` 497/497, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 GitHub 다운로드·설치·Electron 실행과 VoiceBox/VOICEVOX는 수행하지 않았다.
+
+## 2026-09-20 Desktop 업데이트 staging 트랜잭션 완료
+
+- `stageDesktopUpdate`를 추가해 `decideDesktopUpdate`가 `update_available`을 반환할 때만 검증된 artifact를 `installRoot/.updates/<version>`에 staging한다. Workspace root와 설치 root가 겹치거나 artifact path/hash가 일치하지 않으면 다운로드하지 않는다.
+- staging은 기존 checksum·symlink·원자 교체 경계를 재사용하며 실패 시 해당 버전 staging 디렉터리를 정리한다. 실행 중인 앱 교체·재시작·Electron 동작은 수행하지 않는다.
+- 검증: 업데이트 staging 집중 테스트 5/5, 전체 `npm test` 502/502, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 GitHub 다운로드·설치와 VoiceBox/VOICEVOX는 실행하지 않았다.
