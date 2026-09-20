@@ -435,3 +435,18 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `parseWorkspaceSnapshot`/`validateWorkspaceSnapshot`은 unknown field, 미지원 버전, 잘못된 revision, malformed workspace, cross-reference 오류를 결정적인 진단으로 반환하고 성공 결과를 deep clone한다. 파일·네트워크·프로세스·입력 변이는 수행하지 않는다.
 - `tests/workspace-snapshot.test.ts`에서 정상 clone, 버전·revision 오류, strict field, malformed workspace, cross-reference, 입력 불변성을 검증했다. 집중 테스트 7/7, 전체 `npm test` 525/525, typecheck, build, diff check 통과.
 - 다음 단계는 이 계약에 맞는 canonical Workspace 저장 위치와 file reader를 별도 결정한 뒤에만 startup의 `getWorkspace`를 연결하는 것이다.
+
+## 2026-09-20 worktree 재개: Workspace 파일 reader
+
+- 사용자 지정 worktree `C:\Users\Administrator\.codex\worktrees\040c\Short-auto`에서 기존 `01_Core_v2` 담당 작업을 재개했다. 원본 checkout은 수정하지 않았다.
+- `FileWorkspaceReader`는 명시적 root와 상대 snapshot 경로를 받아 매번 최신 파일을 읽고 기존 snapshot 계약을 검증한다. 기본 16 MiB 제한, 경로·symlink 탈출 차단, regular file 검사, 열린 파일 identity와 읽기 전후 변경 검사, UTF-8·JSON 검증을 적용했다.
+- 저장 파일 생성·기본 경로 추정·승인 생성은 하지 않는다. 집중 reader/snapshot 12개와 전체 530개 테스트, typecheck, build가 통과했고 Master reader 집중 테스트 5개도 통과했다.
+- 다음 단위는 서버 설정에 명시된 snapshot 경로를 reader와 연결하고 게시 검수마다 최신 Workspace를 읽는 통합이다.
+
+## 2026-09-20 파일 기반 Workspace 게시 검수 연결
+
+- 기존 `12_Integration_v2`가 같은 worktree에서 `SHORT_AUTO_WORKSPACE_SNAPSHOT` 서버 설정과 reader를 연결했다. 경로는 현재 APP_PATHS.projectRoot 기준 상대 경로이며 자동 생성·예제 fallback 없이 매 검수마다 읽는다.
+- 게시 boundary는 동기/비동기 Workspace 공급자를 지원한다. 미설정·삭제·손상·계약 오류는 검수를 차단하고 원시 OS 오류나 파일 경로를 응답에 노출하지 않는다.
+- 승인 처리 중 snapshot 삭제 또는 production revision 변경이 발생하면 게시 직전 재검수에서 차단하여 fake Publisher 호출이 0회임을 확인했다. snapshot revision은 승인 증거를 대체하지 않는다.
+- 전체 535개 테스트, typecheck, build, diff check 통과. Master가 파일 연결 집중 테스트 5개를 별도 확인했다. 앱의 고정 데이터 root가 원본 D:를 가리키므로 앱 자체를 시작하지 않고 임시 root의 route 통합 테스트를 사용했다.
+- README에 설정·envelope·파일 제한을 기록했다. 인증 공급자, snapshot 작성/편집 UI, 최종 렌더 증거 생성은 후속 구현이며 실제 업로드를 수행한 것은 아니다.
