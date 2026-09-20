@@ -370,3 +370,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `decideDesktopUpdate`를 추가해 네트워크 없이 현재 semantic version·채널과 검증된 ReleaseManifest를 비교한다. Stable은 stable release만, Beta는 stable과 beta release를 고려하고 prerelease 우선순위를 반영한다.
 - 동일·낮은 버전, 채널 불일치, 잘못된 현재 버전/manifest는 파일·설치·네트워크 부작용 없이 구조화된 결정과 진단으로 반환한다. Electron·Installer·GitHub API 연결은 아직 하지 않았다.
 - 검증: Desktop 업데이트 집중 테스트 5/5, 전체 `npm test` 484/484, `npm run typecheck`, `npm run build`, `git diff --check` 통과. VoiceBox/VOICEVOX는 실행하지 않았다.
+
+## 2026-09-20 YouTube 게시 검수 API 연결 완료
+
+- `POST /api/youtube/publishing/review` 로컬 route를 추가해 기존 `YouTubePublishingBoundary`의 dry-run 검수를 HTTP에서 호출할 수 있게 했다. 검수 성공은 200 응답으로 상태·진단·metadata를, 차단은 409 `YOUTUBE_PUBLISHING_BLOCKED` envelope로 반환한다.
+- 서버에는 optional route hook만 추가했으며 현재 `start.ts`에 임의 Workspace/OAuth/Publisher를 연결하지 않았다. 외부 YouTube 업로드·예약·인증 호출은 실행하지 않는다.
+- 검증: route 집중 테스트 3/3, 전체 `npm test` 487/487, `npm run typecheck`, `npm run build`, `git diff --check` 통과. VoiceBox/VOICEVOX는 실행하지 않았다.

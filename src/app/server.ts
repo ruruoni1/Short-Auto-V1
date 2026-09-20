@@ -21,6 +21,7 @@ export interface ServerOptions {
   contentPlanRoute?: AppRoute;
   autoPlannerRoute?: AppRoute;
   scenePlanRoute?: AppRoute;
+  youtubePublishingRoute?: AppRoute;
 }
 
 const QuerySchema = z.object({
@@ -87,6 +88,7 @@ export function createAppServer(options: ServerOptions) {
       if (options.contentPlanRoute && await options.contentPlanRoute(req, res, path, method, body, json)) return;
       if (options.autoPlannerRoute && await options.autoPlannerRoute(req, res, path, method, body, json)) return;
       if (options.scenePlanRoute && await options.scenePlanRoute(req, res, path, method, body, json)) return;
+      if (options.youtubePublishingRoute && await options.youtubePublishingRoute(req, res, path, method, body, json)) return;
       if (path === '/api/channels') {
         if (method === 'GET') { json(res, 200, { data: repo.listChannels() }); return; }
         if (method === 'POST') { json(res, 201, { data: repo.createChannel(await body(req)) }); return; }
