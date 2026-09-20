@@ -428,3 +428,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 별도 `PublishingApprovalProvider` seam은 명시적으로 주입된 경우에만 검수 통과 후 Publisher를 제공하며, 승인 뒤에도 boundary가 Workspace·권리·파일 증거를 다시 검수한다. OAuth 흐름·토큰 저장·실제 외부 업로드는 자동 연결하지 않았다.
 - `tests/youtube-startup-wiring.test.ts`에서 승인 공급자 없음, 검수 실패 전 호출 차단, fresh review 후 fake Publisher 실행, malformed/secret 값 비노출을 검증했다. 집중 테스트 3/3, 전체 `npm test` 518/518, typecheck, build, diff check 통과.
 - 남은 연결 대상은 실제 Core Workspace reader와 사용자가 명시적으로 승인한 인증 공급자다. VoiceBox/VOICEVOX는 범위에서 제외한다.
+
+## 2026-09-20 Core Workspace snapshot 계약 고정
+
+- 실제 파일 저장 위치를 임의로 정하지 않고, `src/workspace-snapshot.ts`에 `schemaVersion: 1`, nonnegative safe `revision`, 기존 `WorkspaceSchema`를 감싼 순수 read-only snapshot envelope을 정의했다.
+- `parseWorkspaceSnapshot`/`validateWorkspaceSnapshot`은 unknown field, 미지원 버전, 잘못된 revision, malformed workspace, cross-reference 오류를 결정적인 진단으로 반환하고 성공 결과를 deep clone한다. 파일·네트워크·프로세스·입력 변이는 수행하지 않는다.
+- `tests/workspace-snapshot.test.ts`에서 정상 clone, 버전·revision 오류, strict field, malformed workspace, cross-reference, 입력 불변성을 검증했다. 집중 테스트 7/7, 전체 `npm test` 525/525, typecheck, build, diff check 통과.
+- 다음 단계는 이 계약에 맞는 canonical Workspace 저장 위치와 file reader를 별도 결정한 뒤에만 startup의 `getWorkspace`를 연결하는 것이다.
