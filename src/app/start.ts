@@ -27,6 +27,7 @@ import { VoiceStudioProvider } from './voicestudio/provider.js';
 import { VoiceStudioInstaller } from './voicestudio/installer.js';
 import { FileVoiceStudioInstallLocator, VoiceStudioInstallManager } from './voicestudio/install-manager.js';
 import { VoiceStudioProcessManager } from './voicestudio/process-manager.js';
+import { createStartupYouTubePublishingRoute } from './youtube/startup.js';
 
 loadActiveDocuments();
 mkdirSync(APP_PATHS.data, { recursive: true });
@@ -68,6 +69,15 @@ const server = createAppServer({ repository, root: APP_PATHS.projectRoot, youtub
   contentPlanRoute: createContentPlanRoute(contentPlans, thumbnails),
   autoPlannerRoute: createAutoPlannerRoute(),
   scenePlanRoute: createScenePlanRoute(),
+  youtubePublishingRoute: createStartupYouTubePublishingRoute({
+    projectRoot: APP_PATHS.projectRoot,
+    // Core workspace persistence is not wired into this local app yet.
+    // Missing evidence is reported by the review boundary and blocks attempts.
+    getWorkspace: () => undefined,
+    contentPlans,
+    sourceFrames,
+    thumbnails,
+  }),
 });
 const port = Number(process.env.SHORT_AUTO_PORT ?? 4310);
 if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid SHORT_AUTO_PORT');

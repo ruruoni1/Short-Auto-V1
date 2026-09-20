@@ -421,3 +421,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 따라서 현재 코드의 VoiceVox/VoiceStudio 검증은 fetch 모킹·가짜 프로세스 기반 계약 테스트까지 완료된 상태이며, 실제 화자 목록·WAV 합성은 백엔드 기동 후 별도 검증이 필요하다. VoiceBox는 범위에서 제외한다.
 - 추가로 실제 FFmpeg 8.1.1 smoke 검증을 수행했다. 320x180 1초 MP4를 생성하고 ffprobe로 1.000000초를 확인한 뒤 0.5초 PNG 프레임 추출까지 성공했으며 임시 파일은 삭제했다.
 - 런타임 토큰 공급자가 문자열 외 값(number/object)을 반환하는 경우도 ACCESS_TOKEN_MISSING으로 안정 처리하고 fetch를 호출하지 않는 회귀 테스트를 추가했다. 전체 npm test는 515/515 통과했다.
+
+## 2026-09-20 YouTube 게시 startup wiring 완료
+
+- `src/app/start.ts`가 `createStartupYouTubePublishingRoute`를 연결해 로컬 앱에서도 게시 검수 route를 노출한다. 현재 Core Workspace reader가 연결되지 않은 상태는 검수 진단으로 표시되고, Publisher·승인 공급자가 없으면 attempt가 409로 fail-closed 처리된다.
+- 별도 `PublishingApprovalProvider` seam은 명시적으로 주입된 경우에만 검수 통과 후 Publisher를 제공하며, 승인 뒤에도 boundary가 Workspace·권리·파일 증거를 다시 검수한다. OAuth 흐름·토큰 저장·실제 외부 업로드는 자동 연결하지 않았다.
+- `tests/youtube-startup-wiring.test.ts`에서 승인 공급자 없음, 검수 실패 전 호출 차단, fresh review 후 fake Publisher 실행, malformed/secret 값 비노출을 검증했다. 집중 테스트 3/3, 전체 `npm test` 518/518, typecheck, build, diff check 통과.
+- 남은 연결 대상은 실제 Core Workspace reader와 사용자가 명시적으로 승인한 인증 공급자다. VoiceBox/VOICEVOX는 범위에서 제외한다.
