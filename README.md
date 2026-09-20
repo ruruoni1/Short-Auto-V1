@@ -30,6 +30,19 @@ npm run app
 
 로컬 SQLite는 `data/sources.sqlite`, 소스 미디어는 `assets/media`에 저장되며 Git에서 제외됩니다. 수집한 메타데이터의 원본 URL과 검수 메모를 유지합니다. 현재 API 및 미디어 실연결 검증 여부는 [클립 검증 기록](docs/CLIP_LIBRARY_QA.md)을 확인하세요.
 
+### 게시 검수용 Workspace snapshot
+
+서버 환경변수 `SHORT_AUTO_WORKSPACE_SNAPSHOT`에 애플리케이션 프로젝트 루트 기준 상대 JSON 경로를 설정하면 게시 검수에서 파일을 다시 읽습니다. 현재 애플리케이션 데이터 루트는 `D:\coding\Short-auto`이며 개발 worktree 위치와 구분됩니다.
+
+```powershell
+$env:SHORT_AUTO_WORKSPACE_SNAPSHOT = 'data/workspace-snapshot.json'
+npm run app
+```
+
+위 경로는 설정 예시이며 자동으로 생성되지 않습니다. 파일 형식은 `{ "schemaVersion": 1, "revision": 0, "workspace": { "packs": [], "projects": [], "contents": [] } }`입니다. 실제 프로젝트·콘텐츠·승인 정보가 들어 있어야 게시 검수를 통과할 수 있습니다. snapshot revision은 저장본의 버전이며 프로젝트 승인 revision을 대체하지 않습니다.
+
+파일이 없거나 UTF-8·JSON·Core 계약 검증에 실패하면 게시가 차단됩니다. 기본 파일 크기 제한은 16 MiB입니다. 예제 Workspace를 자동으로 불러오지 않으며 snapshot 설정만으로 OAuth 인증이나 실제 업로드가 활성화되지는 않습니다.
+
 ## 사용
 
 ```ts

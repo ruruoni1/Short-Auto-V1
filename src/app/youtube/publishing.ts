@@ -36,7 +36,7 @@ export type PublishingRequest = z.infer<typeof PublishingRequestSchema>;
 
 export interface PublishingDependencies {
   projectRoot: string;
-  getWorkspace(): unknown;
+  getWorkspace(): unknown | Promise<unknown>;
   contentPlans: Pick<{ getContentPlan(id: string): ContentPlan }, 'getContentPlan'>;
   sourceFrames: Pick<{ getFrame(id: string): SourceFrame }, 'getFrame'>;
   thumbnails: Pick<{ listProjects(): ThumbnailProject[] }, 'listProjects'>;
@@ -121,7 +121,7 @@ export class YouTubePublishingBoundary {
     const { metadata, render } = parsed.data;
     const errors = metadataDiagnostics(metadata);
     let workspace: unknown;
-    try { workspace = this.#dependencies.getWorkspace(); }
+    try { workspace = await this.#dependencies.getWorkspace(); }
     catch { errors.push(diagnostic('WORKSPACE_UNAVAILABLE', 'workspace', 'Workspace could not be read.')); }
     const workspaceParsed = WorkspaceSchema.safeParse(workspace);
     if (!workspaceParsed.success) {

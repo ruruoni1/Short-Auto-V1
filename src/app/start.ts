@@ -28,6 +28,7 @@ import { VoiceStudioInstaller } from './voicestudio/installer.js';
 import { FileVoiceStudioInstallLocator, VoiceStudioInstallManager } from './voicestudio/install-manager.js';
 import { VoiceStudioProcessManager } from './voicestudio/process-manager.js';
 import { createStartupYouTubePublishingRoute } from './youtube/startup.js';
+import { createYouTubeWorkspaceProvider } from './youtube/workspace-provider.js';
 
 loadActiveDocuments();
 mkdirSync(APP_PATHS.data, { recursive: true });
@@ -71,9 +72,7 @@ const server = createAppServer({ repository, root: APP_PATHS.projectRoot, youtub
   scenePlanRoute: createScenePlanRoute(),
   youtubePublishingRoute: createStartupYouTubePublishingRoute({
     projectRoot: APP_PATHS.projectRoot,
-    // Core workspace persistence is not wired into this local app yet.
-    // Missing evidence is reported by the review boundary and blocks attempts.
-    getWorkspace: () => undefined,
+    getWorkspace: createYouTubeWorkspaceProvider(APP_PATHS.projectRoot, process.env.SHORT_AUTO_WORKSPACE_SNAPSHOT),
     contentPlans,
     sourceFrames,
     thumbnails,
