@@ -382,3 +382,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `fetchGitHubReleaseManifest`를 추가해 주입된 HTTP 응답만으로 공식 `api.github.com` Release JSON을 검증된 ReleaseManifest로 변환한다. 요청 tag와 응답 `tag_name` 일치, semantic version, draft/private 상태, 안전한 artifact 경로를 확인한다.
 - 공식 GitHub checksum asset이 있으면 SHA-256을 artifact에 연결하고, 없으면 해시를 생략한다. 실제 GitHub 호출·파일 다운로드·설치·Electron 실행은 수행하지 않으며 오류 응답에 secret-like 값을 노출하지 않는다.
 - 검증: GitHub Release 집중 테스트 5/5, 전체 `npm test` 492/492, `npm run typecheck`, `npm run build`, `git diff --check` 통과. VoiceBox/VOICEVOX는 실행하지 않았다.
+
+## 2026-09-20 Desktop artifact 다운로드 경계 완료
+
+- `downloadGitHubArtifact`를 추가해 공식 GitHub HTTPS artifact를 주입된 fetch로 읽고, projectRoot 내부의 상대 destination·symlink 경계를 확인한 뒤 `.part` 파일에 기록한다.
+- 다운로드 bytes는 비어 있지 않은지·크기 제한·SHA-256을 확인한 뒤 원자적으로 교체한다. HTTP 실패·네트워크 예외·hash mismatch·경로 탈출 시 최종 파일과 partial 파일을 남기지 않는다.
+- 검증: artifact 다운로드 집중 테스트 5/5, 전체 `npm test` 497/497, `npm run typecheck`, `npm run build`, `git diff --check` 통과. 실제 GitHub 다운로드·설치·Electron 실행과 VoiceBox/VOICEVOX는 수행하지 않았다.

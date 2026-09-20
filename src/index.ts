@@ -11,3 +11,4 @@ export * from './scene-plan-adapter.js';
 export * from './app/desktop/contract.js';
 export * from './app/desktop/update-policy.js';
 export * from './app/desktop/github-release.js';
+export * from './app/desktop/artifact-download.js';
