@@ -81,6 +81,20 @@ test('missing and throwing access token providers fail without an upload', async
   expectFailure(await publisher(root, noFetch(), () => { throw new Error(secret); }).publish(metadata), 'ACCESS_TOKEN_UNAVAILABLE', true);
 });
 
+test('malformed access token provider results fail without an upload', async t => {
+  const { root, metadata } = fixture(t);
+  let calls = 0;
+  const fetchImpl: typeof fetch = async () => {
+    calls++;
+    throw new Error('Fetch must not be called.');
+  };
+  for (const malformed of [123, { accessToken: secret }]) {
+    const getAccessToken = () => malformed as unknown as string;
+    expectFailure(await publisher(root, fetchImpl, getAccessToken).publish(metadata), 'ACCESS_TOKEN_MISSING', false);
+  }
+  assert.equal(calls, 0);
+});
+
 test('traversal, absolute paths, and symlink escapes fail before upload', async t => {
   const { root, metadata } = fixture(t);
   const outside = mkdtempSync(join(tmpdir(), 'youtube-api-outside-'));

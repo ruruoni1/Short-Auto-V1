@@ -420,3 +420,4 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - VoiceVox CLI/엔진 명령은 PATH에서 발견되지 않았다. 프로젝트 설치 locator가 `C:\Users\Administrator\AppData\Local\VoiceStudio (Current User)\omnivoice-studio.exe`(OmniVoice Studio 0.5.3)를 발견했지만, `127.0.0.1:3900/health`, `/v1/audio/voices`와 VoiceVox 기본 `127.0.0.1:50021/version`은 모두 연결 거부 상태였다.
 - 따라서 현재 코드의 VoiceVox/VoiceStudio 검증은 fetch 모킹·가짜 프로세스 기반 계약 테스트까지 완료된 상태이며, 실제 화자 목록·WAV 합성은 백엔드 기동 후 별도 검증이 필요하다. VoiceBox는 범위에서 제외한다.
 - 추가로 실제 FFmpeg 8.1.1 smoke 검증을 수행했다. 320x180 1초 MP4를 생성하고 ffprobe로 1.000000초를 확인한 뒤 0.5초 PNG 프레임 추출까지 성공했으며 임시 파일은 삭제했다.
+- 런타임 토큰 공급자가 문자열 외 값(number/object)을 반환하는 경우도 ACCESS_TOKEN_MISSING으로 안정 처리하고 fetch를 호출하지 않는 회귀 테스트를 추가했다. 전체 npm test는 515/515 통과했다.
