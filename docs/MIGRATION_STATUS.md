@@ -376,3 +376,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `POST /api/youtube/publishing/review` 로컬 route를 추가해 기존 `YouTubePublishingBoundary`의 dry-run 검수를 HTTP에서 호출할 수 있게 했다. 검수 성공은 200 응답으로 상태·진단·metadata를, 차단은 409 `YOUTUBE_PUBLISHING_BLOCKED` envelope로 반환한다.
 - 서버에는 optional route hook만 추가했으며 현재 `start.ts`에 임의 Workspace/OAuth/Publisher를 연결하지 않았다. 외부 YouTube 업로드·예약·인증 호출은 실행하지 않는다.
 - 검증: route 집중 테스트 3/3, 전체 `npm test` 487/487, `npm run typecheck`, `npm run build`, `git diff --check` 통과. VoiceBox/VOICEVOX는 실행하지 않았다.
+
+## 2026-09-20 GitHub Release manifest 어댑터 완료
+
+- `fetchGitHubReleaseManifest`를 추가해 주입된 HTTP 응답만으로 공식 `api.github.com` Release JSON을 검증된 ReleaseManifest로 변환한다. 요청 tag와 응답 `tag_name` 일치, semantic version, draft/private 상태, 안전한 artifact 경로를 확인한다.
+- 공식 GitHub checksum asset이 있으면 SHA-256을 artifact에 연결하고, 없으면 해시를 생략한다. 실제 GitHub 호출·파일 다운로드·설치·Electron 실행은 수행하지 않으며 오류 응답에 secret-like 값을 노출하지 않는다.
+- 검증: GitHub Release 집중 테스트 5/5, 전체 `npm test` 492/492, `npm run typecheck`, `npm run build`, `git diff --check` 통과. VoiceBox/VOICEVOX는 실행하지 않았다.
