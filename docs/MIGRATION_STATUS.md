@@ -406,3 +406,10 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - `/api/youtube/publishing/attempt`를 추가해 주입된 Publisher 결과를 uploaded(200), 검수 차단(409), 게시 실패(502)로 구분해 반환한다. 기존 review route와 Core readiness·권리 검수 경계는 그대로 유지한다.
 - 현재 `start.ts`에는 실제 OAuth/Publisher를 연결하지 않았으므로 외부 업로드는 자동 실행되지 않는다. 이 route는 이후 명시적으로 승인된 YouTube adapter를 주입할 수 있는 로컬 경계다.
 - 검증: attempt route 집중 테스트 4/4, 전체 `npm test` 507/507, `npm run typecheck`, `npm run build`, `git diff --check` 통과. VoiceBox/VOICEVOX는 실행하지 않았다.
+
+## 2026-09-20 YouTube Data API Publisher adapter 추가
+
+- `src/app/youtube/api-publisher.ts`에 OAuth 중립적인 주입형 `YouTubeApiPublisher`를 추가했다. 호출자가 제공한 access token과 fetch 구현으로만 YouTube `videos.insert` multipart 요청을 만들며, OAuth 브라우저 흐름·refresh token·예약·thumbnail/playlist API는 포함하지 않는다.
+- 프로젝트 루트 내부의 로컬 MP4만 읽고 traversal, 절대 경로, 심볼릭 링크 탈출, 디렉터리·누락 파일을 차단한다. 토큰·응답 본문·예외 메시지는 결과에 노출하지 않고 기존 `PublishingResult` 실패 코드와 retryable 플래그로 매핑한다.
+- `tests/youtube-api-publisher.test.ts`에서 multipart 바이트 보존, 성공 video ID 매핑, 토큰/경로/심볼릭 링크/스케줄 차단, HTTP·네트워크·응답 오류 비노출을 검증했다. `npm test` 514/514, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
+- 실제 OAuth 자격 증명이나 외부 업로드는 연결하지 않았다. 이후 작업은 명시적 인증 공급자와 운영 승인 경계를 `start.ts`에 연결하는 것이다.
