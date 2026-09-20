@@ -400,3 +400,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - AutoPlanner가 만든 Scene 계획을 version 1 reviewed handoff로 넘기고, `applyReviewedScenePlan`과 `prepareReviewedScenePreview`를 순서대로 호출하는 통합 회귀 테스트를 추가했다.
 - Preview 입력에서 SourceTimeline·Scene ID·프로젝트 status/revision이 보존되고, 오류 진단이 포함된 handoff와 잘못된 reviewedAt은 렌더 runtime 전에 차단되는 것을 확인했다. 실제 FFmpeg·TTS·YouTube·파일 네트워크 동작은 실행하지 않았다.
 - 검증: 통합 집중 테스트 1/1, 전체 `npm test` 503/503, `npm run typecheck`, `npm run build`, `git diff --check` 통과. VoiceBox/VOICEVOX는 실행하지 않았다.
+
+## 2026-09-20 YouTube 게시 attempt API 연결 완료
+
+- `/api/youtube/publishing/attempt`를 추가해 주입된 Publisher 결과를 uploaded(200), 검수 차단(409), 게시 실패(502)로 구분해 반환한다. 기존 review route와 Core readiness·권리 검수 경계는 그대로 유지한다.
+- 현재 `start.ts`에는 실제 OAuth/Publisher를 연결하지 않았으므로 외부 업로드는 자동 실행되지 않는다. 이 route는 이후 명시적으로 승인된 YouTube adapter를 주입할 수 있는 로컬 경계다.
+- 검증: attempt route 집중 테스트 4/4, 전체 `npm test` 507/507, `npm run typecheck`, `npm run build`, `git diff --check` 통과. VoiceBox/VOICEVOX는 실행하지 않았다.
