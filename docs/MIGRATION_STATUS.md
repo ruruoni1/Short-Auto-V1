@@ -413,3 +413,9 @@ Master 직속 구현 하위 에이전트는 중단한 상태로 유지한다. �
 - 프로젝트 루트 내부의 로컬 MP4만 읽고 traversal, 절대 경로, 심볼릭 링크 탈출, 디렉터리·누락 파일을 차단한다. 토큰·응답 본문·예외 메시지는 결과에 노출하지 않고 기존 `PublishingResult` 실패 코드와 retryable 플래그로 매핑한다.
 - `tests/youtube-api-publisher.test.ts`에서 multipart 바이트 보존, 성공 video ID 매핑, 토큰/경로/심볼릭 링크/스케줄 차단, HTTP·네트워크·응답 오류 비노출을 검증했다. `npm test` 514/514, `npm run typecheck`, `npm run build`, `git diff --check` 통과.
 - 실제 OAuth 자격 증명이나 외부 업로드는 연결하지 않았다. 이후 작업은 명시적 인증 공급자와 운영 승인 경계를 `start.ts`에 연결하는 것이다.
+
+## 2026-09-20 로컬 미디어/TTS 엔진 환경 검증
+
+- `ffmpeg -version`과 `ffprobe -version`을 실제 PATH에서 실행해 FFmpeg 8.1.1 essentials build를 확인했다.
+- VoiceVox CLI/엔진 명령은 PATH에서 발견되지 않았다. 프로젝트 설치 locator가 `C:\Users\Administrator\AppData\Local\VoiceStudio (Current User)\omnivoice-studio.exe`(OmniVoice Studio 0.5.3)를 발견했지만, `127.0.0.1:3900/health`, `/v1/audio/voices`와 VoiceVox 기본 `127.0.0.1:50021/version`은 모두 연결 거부 상태였다.
+- 따라서 현재 코드의 VoiceVox/VoiceStudio 검증은 fetch 모킹·가짜 프로세스 기반 계약 테스트까지 완료된 상태이며, 실제 화자 목록·WAV 합성은 백엔드 기동 후 별도 검증이 필요하다. VoiceBox는 범위에서 제외한다.
